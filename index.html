@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Menu AI Chat</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
+    <style>
+        body {
+            background-color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: autp;
+            padding: 10px 20px;
+            background-color: #f8f8f8;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            height: 50px;
+        }
+
+        .logo-text {
+            font-size: 24px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .update-menu-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .chat-container {
+            width: 100%;
+            margin-top: 20px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-color: #ffffff;
+        }
+
+        .scroll-indicator {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .scroll-indicator.visible {
+            display: block;
+        }
+
+        .input-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .input-buttons {
+            display: flex;
+            align-items: center;
+            margin-left: 10px;
+        }
+
+        .mic-button, .send-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-left: 5px;
+        }
+
+        .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .user-message {
+            align-self: flex-end;
+        }
+
+        .ai-message {
+            align-self: flex-start;
+        }
+
+        .error-message {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+
+        .system-message {
+            background-color: #e0e0e0;
+            color: #616161;
+        }
+
+        .ai-message-container {
+            display: flex;
+            align-items: center;
+        }
+
+        .speak-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .follow-up-container {
+            margin-top: 10px;
+        }
+
+        .follow-up-button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        .chat-container {
+            width: auto;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            background-color: #f0f0f0;
+            margin: 0 auto;
+            padding: 1rem;
+            box-sizing: border-box;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-container {
+            position: sticky;
+            bottom: 0;
+            padding: 1rem;
+            margin: 0 auto;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .chat-messages, .input-container, #followUpInput {
+            background: #fff;
+        }
+        .chat-messages, #followUpInput {
+            width: auto;
+            height: auto;
+        }
+        #followUpInput {
+            width: 1600px;
+            padding: 0.5rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            resize: none;
+            box-sizing: border-box;
+            font-size: 1rem;
+        }
+        body {
+            background-image: url('iguru_hyd.png');
+            background-repeat: repeat;
+            background-attachment: fixed;
+            margin: 0 10px 10px 10px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <defs>
+                <pattern id="image" patternUnits="userSpaceOnUse" width="100" height="100">
+                    <image href="iguru_hyd.png" x="0" y="0" width="100" height="100" />
+                </pattern>
+            </defs>
+            <circle cx="50" cy="50" r="50" fill="url(#image)" />
+        </svg>
+        <span class="logo-text">Iguru Restaurant Chatbot</span>
+        <button id="updateMenuBtn" class="update-menu-btn" onclick="updateMenu()">
+            Update Menu
+        </button>
+    </header>
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div id="scrollIndicator" class="scroll-indicator" onclick="scrollToBottom()">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+        <div class="input-container">
+            <div style="position: relative;">
+                <textarea 
+                    id="followUpInput" 
+                    placeholder="Enter your message here..." 
+                    rows="2"
+                ></textarea>
+                <div class="input-buttons">
+                    <button class="mic-button" id="recordButton" onclick="toggleRecording()">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="send-button" onclick="handleFollowUp()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000' 
+            : '';
+
+        async function updateMenu() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/update-menu`);
+                const data = await response.json();
+                if (response.ok) {
+                    addMessage('Menu updated successfully!', 'system');
+                } else {
+                    throw new Error(data.error);
+                }
+            } catch (error) {
+                addMessage(`Error updating menu: ${error.message}`, 'error');
+            }
+        }
+
+        async function handleFollowUp(question = null) {
+            const followUpInput = document.getElementById('followUpInput');
+            const prompt = question || followUpInput.value.trim();
+            followUpInput.value = '';
+
+            if (!prompt) {
+                addMessage('Please enter a message', 'error');
+                return;
+            }
+
+            addMessage(prompt, 'user');
+
+            try {
+                const requestBody = { prompt };
+                const response = await fetch(`${API_BASE_URL}/continue-chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || `Server error: ${response.status}`);
+                }
+                
+                addMessage(data.response, 'ai', data.followUpQuestions);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
+            }
+        }
+
+        function addMessage(message, type, followUpQuestions = null) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            
+            if (type === 'ai') {
+                const container = document.createElement('div');
+                container.classList.add('ai-message-container');
+                
+                messageDiv.classList.add('message', 'ai-message');
+                
+                let displayMessage;
+                try {
+                    const parsedMessage = JSON.parse(message);
+                    displayMessage = parsedMessage.answer;
+                } catch (e) {
+                    displayMessage = message;
+                }
+                
+                let formattedMessage = marked.parse(displayMessage);
+                messageDiv.innerHTML = formattedMessage;
+                
+                const speakButton = document.createElement('button');
+                speakButton.classList.add('speak-button');
+                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                speakButton.onclick = () => toggleSpeak(speakButton, displayMessage);
+                
+                container.appendChild(messageDiv);
+                container.appendChild(speakButton);
+
+                if (followUpQuestions && followUpQuestions.length > 0) {
+                    const followUpContainer = document.createElement('div');
+                    followUpContainer.classList.add('follow-up-container');
+                    
+                    followUpQuestions.forEach(question => {
+                        const button = document.createElement('button');
+                        button.classList.add('follow-up-button');
+                        button.textContent = question;
+                        button.onclick = () => handleFollowUp(question);
+                        followUpContainer.appendChild(button);
+                    });
+                    
+                    container.appendChild(followUpContainer);
+                }
+                
+                chatMessages.appendChild(container);
+                // Show scroll indicator after AI response
+                setTimeout(() => showScrollIndicator(), 100);
+            } else {
+                messageDiv.classList.add('message');
+                if (type === 'error') {
+                    messageDiv.classList.add('error-message');
+                    messageDiv.textContent = message;
+                } else if (type === 'user') {
+                    messageDiv.classList.add('user-message');
+                    messageDiv.textContent = message;
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                } else if (type === 'system') {
+                    messageDiv.classList.add('system-message');
+                    messageDiv.textContent = message;
+                }
+                chatMessages.appendChild(messageDiv);
+            }
+        }
+
+        // Add marked.js for markdown parsing
+        const script = document.createElement('script');
+        script.src = 'https://cdn.jsdelivr.net/npm/marked/marked.min.js';
+        document.head.appendChild(script);
+
+        // Add event listener for Enter key (Shift + Enter for new line)
+        document.getElementById('followUpInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleFollowUp();
+            }
+        });
+
+        let mediaRecorder = null;
+        let audioChunks = [];
+        let speaking = false;
+        let synthesis = window.speechSynthesis;
+
+        async function toggleRecording() {
+            const button = document.getElementById('recordButton');
+            const icon = button.querySelector('i');
+            const followUpInput = document.getElementById('followUpInput');
+
+            if (!button.classList.contains('recording')) {
+                try {
+                    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    recognition.continuous = true;
+                    recognition.interimResults = true;
+                    
+                    recognition.onresult = (event) => {
+                        let finalTranscript = '';
+                        let interimTranscript = '';
+                        
+                        for (let i = 0; i < event.results.length; i++) {
+                            if (event.results[i].isFinal) {
+                                finalTranscript += event.results[i][0].transcript;
+                            } else {
+                                interimTranscript += event.results[i][0].transcript;
+                            }
+                        }
+                        
+                        followUpInput.value = finalTranscript + interimTranscript;
+                    };
+
+                    recognition.onend = () => {
+                        if (button.classList.contains('recording')) {
+                            recognition.start();
+                        }
+                    };
+
+                    button.classList.add('recording');
+                    icon.className = 'fas fa-stop';
+                    recognition.start();
+                    
+                    // Store recognition instance to stop it later
+                    button.recognition = recognition;
+                    
+                } catch (err) {
+                    console.error('Error accessing speech recognition:', err);
+                    return;
+                }
+            } else {
+                button.classList.remove('recording');
+                icon.className = 'fas fa-microphone';
+                if (button.recognition) {
+                    button.recognition.stop();
+                }
+            }
+        }
+
+        function toggleSpeak(button, text) {
+            if (speaking) {
+                synthesis.cancel();
+                speaking = false;
+                button.classList.remove('speaking');
+                button.innerHTML = '<i class="fas fa-volume-up"></i>';
+                return;
+            }
+
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.onend = () => {
+                speaking = false;
+                button.classList.remove('speaking');
+                button.innerHTML = '<i class="fas fa-volume-up"></i>';
+            };
+
+            speaking = true;
+            button.classList.add('speaking');
+            button.innerHTML = '<i class="fas fa-stop"></i>';
+            synthesis.speak(utterance);
+        }
+
+        // Add these new functions
+        function showScrollIndicator() {
+            const chatMessages = document.getElementById('chatMessages');
+            const scrollIndicator = document.getElementById('scrollIndicator');
+            
+            // Show indicator if there's content below viewport
+            if (chatMessages.scrollHeight > chatMessages.clientHeight + chatMessages.scrollTop + 100) {
+                scrollIndicator.classList.add('visible');
+            } else {
+                scrollIndicator.classList.remove('visible');
+            }
+        }
+
+        function scrollToBottom() {
+            const chatMessages = document.getElementById('chatMessages');
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            document.getElementById('scrollIndicator').classList.remove('visible');
+        }
+
+        // Add scroll event listener to hide/show indicator
+        document.getElementById('chatMessages').addEventListener('scroll', showScrollIndicator);
+    </script>
+</body>
+</html>

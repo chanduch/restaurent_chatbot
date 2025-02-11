@@ -1,0 +1,335 @@
+:root {
+    --primary-bg: #000000;
+    --secondary-bg: #0d0d0d;
+    --accent-color: #3182ce;
+    --text-primary: #ffffff;
+    --text-secondary: #90cdf4;
+    --border-color: #333;
+}
+
+body {
+    background-color: var(--primary-bg);
+    color: var(--text-primary);
+    font-family: 'Inter', 'Segoe UI', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    margin: 0;
+    padding: 0;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    padding: 1rem;
+    background-color: var(--secondary-bg);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    justify-content: space-between;
+}
+
+.logo {
+    height: 40px;
+    margin-right: 1rem;
+}
+
+.logo-text {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: darkblue;
+}
+
+
+
+.chat-messages {
+    flex: 1;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    overflow-y: auto;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    background-color: #007bff;
+}
+
+/* Mobile-friendly adjustments */
+@media (max-width: 768px) {
+    .chat-container {
+        padding: 0.5rem;
+    }
+
+    .chat-messages {
+        height: calc(100vh - 250px);
+    }
+
+    .message {
+        margin: 0.5rem 0;
+        padding: 0.75rem;
+    }
+
+    .user-message, .ai-message {
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .input-container {
+        flex-direction: column;
+    }
+
+    .mic-button, button {
+        height: 50px;
+    }
+}
+
+.message {
+    max-width: auto;
+    margin: 20px auto;
+    padding: 20px;
+    border-radius: 8px;
+    font-size: 1em;
+    line-height: 1.6;
+}
+
+.user-message {
+    background-color: #007bff;
+    margin-left: auto;
+    color: var(--text-primary);
+}
+
+.ai-message {
+    background-color: #007bff;
+    margin-right: auto;
+    color: var(--text-primary);
+}
+
+.ai-message h1, .ai-message h2, .ai-message h3 {
+    color: #90cdf4;
+    margin: 20px 0 10px 0;
+}
+
+.ai-message ul {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.ai-message li {
+    margin: 10px 0;
+}
+
+.ai-message code {
+    background-color: #1a202c;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+
+#followUpInput {
+    width: 100%;
+    position: relative;
+    padding: 15px 80px 15px 15px;
+    border: 1px solid #444;
+    border-radius: 8px;
+    font-size: 1.1em;
+    height: 60px;
+    max-height: 60px;
+    box-sizing: border-box;
+}
+
+button {
+    padding: 0 25px;
+    background-color: #4a5568;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1em;
+    transition: background-color 0.3s;
+}
+
+button:hover {
+    background-color: #2c5282;
+}
+
+.error-message {
+    background-color: #742a2a;
+    color: #fff;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #9b2c2c;
+}
+
+.menu-input-container {
+    margin-bottom: 20px;
+    padding: 15px;
+    background-color: #2d3748;
+    border-radius: 8px;
+    border: 1px solid #444;
+}
+
+.menu-input-container label {
+    display: block;
+    margin-bottom: 10px;
+    color: #90cdf4;
+    font-size: 1.1em;
+}
+
+.menu-input {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    background-color: #1a202c;
+    border: 1px solid #444;
+    border-radius: 4px;
+    color: #fff;
+    cursor: pointer;
+}
+
+.menu-input::-webkit-file-upload-button {
+    background-color: #4a5568;
+    color: #fff;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.menu-input::-webkit-file-upload-button:hover {
+    background-color: #2c5282;
+}
+
+.mic-button {
+    background-color: #4a5568;
+    padding: 0 25px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.mic-button.recording {
+    background-color: #e53e3e;
+}
+
+.ai-message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: flex-start;
+}
+
+.speak-button {
+    background-color: #4a5568;
+    padding: 8px;
+    border-radius: 4px;
+    min-width: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.speak-button.speaking {
+    background-color: #2c5282;
+}
+
+.follow-up-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+    width: 100%;
+}
+
+.follow-up-button {
+    background-color: rgba(255, 255, 224, 0.1);
+    color: rgba(255, 255, 224, 0.9);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9em;
+}
+
+.follow-up-button:hover {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .follow-up-container {
+        flex-direction: column;
+    }
+    
+    .follow-up-button {
+        width: 100%;
+    }
+}
+
+.update-menu-btn {
+    background-color: var(--accent-color);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.9em;
+}
+
+.update-menu-btn:hover {
+    background-color: #2c5282;
+}
+
+/* New styles for integrated buttons */
+.input-buttons {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 8px;
+    z-index: 2;
+}
+
+.send-button, .mic-button {
+    background: transparent;
+    border: none;
+    padding: 8px;
+    color: #666;
+    cursor: pointer;
+    transition: color 0.3s;
+}
+
+.send-button:hover, .mic-button:hover {
+    color: var(--text-primary);
+}
+
+/* Add these new styles */
+.scroll-indicator {
+    position: absolute;
+    bottom: 80px; /* Position above input box */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.scroll-indicator.visible {
+    opacity: 1;
+}
+
+.scroll-indicator:hover {
+    background-color: var(--accent-color);
+}
+
+.scroll-indicator i {
+    color: var(--text-primary);
+}
