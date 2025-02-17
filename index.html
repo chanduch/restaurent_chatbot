@@ -117,7 +117,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Restaurant Menu AI Chat</title>
+    <title>Restaurant AI Chatbot</title>
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
@@ -234,8 +234,8 @@
 
     <script>
 
-        const API_BASE_URL = 'http://localhost:3000';
-
+        //const API_BASE_URL = 'http://localhost:3000';
+        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
         async function updateMenu() {
             try {
             const urlParams = new URLSearchParams(window.location.search);
