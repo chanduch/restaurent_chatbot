@@ -40,6 +40,8 @@ async function fetchMenuFromGoogleSheets(restaurant) {
             spreadsheetId = '1Q8Fy3ybQD69e7tIa0Q1P8wVkG8JrM4N-KWjB0fWDh4E';
         } else if(restaurant === 'antera') {
             spreadsheetId = '1hKm2Ipul0K1q32xoJtoBXaEQG4_bvoWLIgGKqLOpMZ8';
+        } else {
+            spreadsheetId = '1EpJYetw5SORLJYsBbLzNPibfn_WLEgGD2F351q6hVrQ';
         }
         
         //https://docs.google.com/spreadsheets/d/1hKm2Ipul0K1q32xoJtoBXaEQG4_bvoWLIgGKqLOpMZ8/edit?usp=sharing
