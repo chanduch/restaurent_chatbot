@@ -1,3 +1,117 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Chatbot</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-size: cover;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+        .chat-container {
+            width: 400px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0,0,0,0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        .chat-header img {
+            width: 50px;
+            height: 50px;
+            margin-right: 10px;
+        }
+        .chat-box {
+            height: 200px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: left;
+            background: #f9f9f9;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        .input-container {
+            display: flex;
+            align-items: center;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+            background: #fff;
+        }
+        .input-container input {
+            flex: 1;
+            border: none;
+            padding: 10px;
+            outline: none;
+        }
+        .input-container button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 5px;
+        }
+        .input-container button img {
+            width: 24px;
+            height: 24px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const restaurantName = urlParams.get('restaurant');
+            console.log("restaurantName is: ", restaurantName);
+            if (restaurantName) {
+                document.title = `${restaurantName} Menu AI Chat`;
+                const logoText = document.querySelector('.logo-text');
+                if (logoText) {
+                    logoText.textContent = `${restaurantName} Chatbot`;
+                    document.body.style.backgroundImage = `url('${restaurantName}.png')`;
+                    const imageUrl = `./${restaurantName.toLowerCase().replace(/\s+/g, '-')}.png`;
+                    document.getElementById("logo-image").setAttribute("href", imageUrl);
+                }
+            }
+        });
+    </script>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <svg class="logo" id="restaurant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+                <defs>
+                    <pattern id="imagePattern" patternUnits="userSpaceOnUse" width="100" height="100">
+                        <image id="logo-image" x="0" y="0" width="100" height="100"></image>
+                    </pattern>
+                </defs>
+                <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
+            </svg>
+                <h2>Restaurant Chatbot</h2>
+        </div>
+        <div class="chat-box" id="chatBox">Chatbot responses will appear here...</div>
+        <div class="input-container">
+            <input type="text" id="userInput" placeholder="Ask about our menu...">
+            <button><img src="mic-icon.png" alt="Mic"></button>
+            <button><img src="record-icon.png" alt="Record"></button>
+        </div>
+    </div>
+</body>
+</html> -->
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,250 +121,50 @@
     <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
-    <style>
-        body {
-            background-color: white;
-            font-family: 'Inter', sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: autp;
-            padding: 10px 20px;
-            background-color: #f8f8f8;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-
-        .logo {
-            height: 50px;
-        }
-
-        .logo-text {
-            font-size: 24px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .update-menu-btn {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .chat-container {
-            width: 100%;
-            margin-top: 20px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            background-color: #ffffff;
-        }
-
-        .scroll-indicator {
-            display: none;
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-        }
-
-        .scroll-indicator.visible {
-            display: block;
-        }
-
-        .input-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .input-buttons {
-            display: flex;
-            align-items: center;
-            margin-left: 10px;
-        }
-
-        .mic-button, .send-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 10px;
-            border-radius: 50%;
-            cursor: pointer;
-            margin-left: 5px;
-        }
-
-        .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            border-radius: 5px;
-        }
-
-        .user-message {
-            align-self: flex-end;
-        }
-
-        .ai-message {
-            align-self: flex-start;
-        }
-
-        .error-message {
-            background-color: #ffebee;
-            color: #d32f2f;
-        }
-
-        .system-message {
-            background-color: #e0e0e0;
-            color: #616161;
-        }
-
-        .ai-message-container {
-            display: flex;
-            align-items: center;
-        }
-
-        .speak-button {
-            background: none;
-            border: none;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-
-        .follow-up-container {
-            margin-top: 10px;
-        }
-
-        .follow-up-button {
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-            margin-right: 5px;
-        }
-        .chat-container {
-            width: auto;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            border-radius: 10px;
-            background-color: #f0f0f0;
-            margin: 0 auto;
-            padding: 1rem;
-            box-sizing: border-box;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .input-container {
-            position: sticky;
-            bottom: 0;
-            padding: 1rem;
-            margin: 0 auto;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        .chat-messages, .input-container, #followUpInput {
-            background: #fff;
-        }
-        .chat-messages, #followUpInput {
-            width: auto;
-            height: auto;
-        }
-        #followUpInput {
-            width: 1600px;
-            padding: 0.5rem 1rem;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            resize: none;
-            box-sizing: border-box;
-            font-size: 1rem;
-        }
-        body {
-            background-image: url('iguru_hyd.png');
-            background-repeat: repeat;
-            background-attachment: fixed;
-            margin: 0 10px 10px 10px;
-        }
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .logo {
-                height: 40px;
-            }
-
-            .logo-text {
-                font-size: 20px;
-                margin-left: 0;
-            }
-
-            .update-menu-btn {
-                padding: 8px 16px;
-                font-size: 14px;
-            }
-
-            .chat-container {
-                width: 100%;
-                padding: 10px;
-            }
-
-            .input-container {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .input-buttons {
-                margin-left: 0;
-                margin-top: 10px;
-                justify-content: space-between;
-            }
-
-            .mic-button, .send-button {
-                padding: 8px;
-                margin-left: 0;
-            }
-
-            #followUpInput {
-                width: 100%;
-                font-size: 14px;
-            }
-
-            .follow-up-button {
-                padding: 5px;
-                font-size: 12px;
-            }
-        }
-    </style>
 </head>
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // if (window.location.pathname.includes('admin')) {
+        //     document.body.innerHTML = '<h1>Admin Panel</h1><p>Welcome to the admin panel. Here you can manage the restaurant menu and settings.</p>';
+        //     return;
+        // }
+        const urlParams = new URLSearchParams(window.location.search);
+        const restaurantName = urlParams.get('restaurant'); 
+        console.log("restaurantName is: ", restaurantName);
+        const isAdmin = urlParams.get('admin');
+        console.log("isAdmin is: ", isAdmin);
+
+        if (isAdmin) {
+            window.location.href = "admin.html"; // Redirect to the admin page
+        }
+
+        if (restaurantName) {
+            document.title = `${restaurantName} Menu AI Chat`;
+            const logoText = document.querySelector('.logo-text');
+            if (logoText) {
+                logoText.textContent = `${restaurantName} Chatbot`;
+                document.body.style.backgroundImage = `url('${restaurantName}.png')`;
+                const imageUrl = `./${restaurantName.toLowerCase().replace(/\s+/g, '-')}.png`;
+                document.getElementById("logo-image").setAttribute("href", imageUrl);
+            }
+            localStorage.setItem('restaurantName', restaurantName);
+        }
+    });
+</script>
 <body>
-    <header class="header">
-        <svg class="logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    
+    <!-- <header class="header">
+        <svg class="logo" id="restaurant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
             <defs>
-                <pattern id="image" patternUnits="userSpaceOnUse" width="100" height="100">
-                    <image href="iguru_hyd.png" x="0" y="0" width="100" height="100" />
+                <pattern id="imagePattern" patternUnits="userSpaceOnUse" width="100" height="100">
+                    <image id="logo-image" x="0" y="0" width="100" height="100"></image>
                 </pattern>
             </defs>
-            <circle cx="50" cy="50" r="50" fill="url(#image)" />
+            <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
         </svg>
-        <span class="logo-text">Iguru Restaurant Chatbot</span>
-        <button id="updateMenuBtn" class="update-menu-btn" onclick="updateMenu()">
+
+        <span class="logo-text">${restaurantName} Restaurant Chatbot</span>
+        <button id="updateMenuBtn" class="update-menu-btn" onclick="updateMenu()" style="display: none;">
             Update Menu
         </button>
     </header>
@@ -276,26 +190,72 @@
                 </div>
             </div>
         </div>
+    </div> -->
+
+
+    
+    <header class="header">
+        <svg class="logo" id="restaurant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <defs>
+                <pattern id="imagePattern" patternUnits="userSpaceOnUse" width="100" height="100">
+                    <image id="logo-image" x="0" y="0" width="100" height="100"></image>
+                </pattern>
+            </defs>
+            <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
+        </svg>
+
+        <span class="logo-text">${restaurantName} Restaurant Chatbot</span>
+        <button id="updateMenuBtn" class="update-menu-btn" onclick="updateMenu()" style="display: none;">
+            Update Menu
+        </button>
+    </header>
+
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages"></div>
+        
+        <div id="scrollIndicator" class="scroll-indicator" onclick="scrollToBottom()">
+            <i class="fas fa-chevron-down"></i>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <textarea id="followUpInput" placeholder="Enter your message..." rows="2"></textarea>
+                <div class="input-buttons">
+                    <button class="icon-button mic-button" id="recordButton" onclick="toggleRecording()">
+                        <i class="fas fa-microphone"></i>
+                    </button>
+                    <button class="icon-button send-button" onclick="handleFollowUp()">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        const API_BASE_URL = window.location.hostname === 'localhost' 
-            ? 'http://localhost:3000' 
-            : '';
+
+        const API_BASE_URL = 'http://localhost:3000';
 
         async function updateMenu() {
             try {
-                const response = await fetch(`${API_BASE_URL}/update-menu`);
-                const data = await response.json();
-                if (response.ok) {
-                    addMessage('Menu updated successfully!', 'system');
-                } else {
-                    throw new Error(data.error);
-                }
+            const urlParams = new URLSearchParams(window.location.search);
+            const restaurantName = urlParams.get('restaurant');
+            const response = await fetch(`${API_BASE_URL}/update-menu?restaurant=${restaurantName}`);
+            const data = await response.json();
+            if (response.ok) {
+               // addMessage('Menu updated successfully!', 'system');
+            } else {
+                throw new Error(data.error);
+            }
             } catch (error) {
-                addMessage(`Error updating menu: ${error.message}`, 'error');
+            addMessage(`Error updating menu: ${error.message}`, 'error');
             }
         }
+
+        // Call updateMenu function after page load
+        document.addEventListener('DOMContentLoaded', () => {
+            updateMenu();
+        });
 
         async function handleFollowUp(question = null) {
             const followUpInput = document.getElementById('followUpInput');
@@ -513,3 +473,4 @@
     </script>
 </body>
 </html>
+

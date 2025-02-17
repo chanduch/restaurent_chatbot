@@ -3,12 +3,27 @@ const cors = require('cors');
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 const path = require('path');
 const axios = require('axios');
+const { Html5Qrcode } = require("html5-qrcode");
+const { LocalStorage } = require('node-localstorage');
+const localStorage = new LocalStorage('./scratch');
 require('dotenv').config();
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.static('.'));
+// app.post('/admin', (req, res) => {
+//     console.log("Redirecting123 to admin.html");
+//     res.sendFile(path.resolve('admin.html'));
+// });
+
+app.use((req, res, next) => {
+    console.log("Redirecting to admin.html if URL contains 'admin':", req.url);
+    if (req.url.includes('admin')) {
+        return res.sendFile(path.resolve(__dirname, 'admin.html'));
+    }
+    next();
+}); 
 
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI('AIzaSyB-O_cLdk9-Xm80N3P2B1Byl5JDa4lEKRs');
@@ -17,16 +32,23 @@ const genAI = new GoogleGenerativeAI('AIzaSyB-O_cLdk9-Xm80N3P2B1Byl5JDa4lEKRs');
 let globalMenuContent = null;
 
 // Modify fetchMenuFromGoogleSheets to store in global variable
-async function fetchMenuFromGoogleSheets() {
-    console.log('**************Fetching menu from Google Sheets**************');
+async function fetchMenuFromGoogleSheets(restaurant) {
+    console.log('**************Fetching menu from Google Sheets**************', restaurant);
+    let spreadsheetId;
     try {
-        const spreadsheetId = '1Q8Fy3ybQD69e7tIa0Q1P8wVkG8JrM4N-KWjB0fWDh4E';
+        if(restaurant === 'iguru') {
+            spreadsheetId = '1Q8Fy3ybQD69e7tIa0Q1P8wVkG8JrM4N-KWjB0fWDh4E';
+        } else if(restaurant === 'antera') {
+            spreadsheetId = '1hKm2Ipul0K1q32xoJtoBXaEQG4_bvoWLIgGKqLOpMZ8';
+        }
+        
+        //https://docs.google.com/spreadsheets/d/1hKm2Ipul0K1q32xoJtoBXaEQG4_bvoWLIgGKqLOpMZ8/edit?usp=sharing
         //const url = 'https://docs.google.com/spreadsheets/d/1EpJYetw5SORLJYsBbLzNPibfn_WLEgGD2F351q6hVrQ/edit?usp=sharing';
         const url = `https://docs.google.com/spreadsheets/d/${spreadsheetId}/export?format=csv`;
         
         const response = await axios.get(url);
         globalMenuContent = response.data;
-        console.log('Menu data updated', response.data);
+        //console.log('Menu data updated', response.data);
         return response.data;
     } catch (error) {
         console.error('Error fetching menu:', error);
@@ -34,13 +56,19 @@ async function fetchMenuFromGoogleSheets() {
     }
 }
 
-// Add new endpoint for menu updates
 app.get('/update-menu', async (req, res) => {
+    const restaurant = req.query.restaurant; // Get restaurant name from URL
+    if (!restaurant) {
+        return res.status(400).json({ error: "Restaurant name is required in URL parameter" });
+    }
+
+    console.log(`Received request to update menu for: ${restaurant}`);
+
     try {
-        await fetchMenuFromGoogleSheets();
-        res.json({ message: 'Menu updated successfully' });
+        await fetchMenuFromGoogleSheets(restaurant); // Pass restaurant name
+        res.json({ message: `Menu for ${restaurant} updated successfully` });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to update menu' });
+        res.status(500).json({ error: `Failed to update menu for ${restaurant}` });
     }
 });
 
@@ -172,36 +200,12 @@ app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
 
-
-
-
-// // Endpoint to fetch historical data
-// app.get('/historical-data', async (req, res) => {
-//     try {
-//         const { startDate, endDate } = req.query;
-//         if (!startDate || !endDate) {
-//             return res.status(400).json({ error: 'Start date and end date are required' });
-//         }
-
-//         // Assuming you have a function to fetch historical data
-//         const historicalData = await fetchHistoricalData(startDate, endDate);
-//         if (!historicalData) {
-//             return res.status(404).json({ error: 'No historical data found for the given date range' });
-//         }
-
-//         res.json(historicalData);
-//     } catch (error) {
-//         console.error('Error fetching historical data:', error);
-//         res.status(500).json({ error: 'Failed to fetch historical data' });
+//app.post('/login', (req, res) => {
+// Redirect to admin.html if URL contains 'admin'
+// app.post('/admin', (req, res) => {
+//     console.log("Redirecting to admin.html");
+//     if (req.url.includes('admin')) {
+//         return res.sendFile(path.join(__dirname, 'admin.html'));
 //     }
+//     //next();
 // });
-
-// // Dummy function to simulate fetching historical data
-// async function fetchHistoricalData(startDate, endDate) {
-//     // Replace with actual logic to fetch data from your data source
-//     return [
-//         { date: '2023-01-01', value: 100 },
-//         { date: '2023-02-01', value: 150 },
-//         // Add more data points as needed
-//     ];
-// }
