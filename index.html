@@ -292,11 +292,61 @@
                 addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
             }
         }
+        function typeText(element, text, speed = 25, callback) {
+    let index = 0;
+    function type() {
+        if (index < text.length) {
+            element.innerHTML += text.charAt(index);
+            index++;
+            setTimeout(type, speed);
+        } else if (callback) {
+            callback(); // Call follow-up function after typing finishes
+        }
+    }
+    type();
+}
 
+// Function to display bot response with typing effect
+function showBotResponse(responseText, followUpQuestions) {
+    const chatMessages = document.getElementById("chatMessages");
+
+    // Create a new message bubble
+    const botMessage = document.createElement("div");
+    botMessage.classList.add("message", "bot-message");  // Add CSS classes
+    chatMessages.appendChild(botMessage);
+
+    // Start typing effect
+    typeText(botMessage, responseText, 50, () => {
+        showFollowUpQuestions(followUpQuestions);
+    });
+    // Scroll to the bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function showFollowUpQuestions(followUpQuestions) {
+    console.log("followUpQuestions is: ", followUpQuestions);
+
+    if (!followUpQuestions || followUpQuestions.length === 0) return;
+
+    const chatMessages = document.getElementById("chatMessages");
+    const followUpContainer = document.createElement("div");
+    followUpContainer.classList.add("follow-up-container");
+
+    followUpQuestions.forEach(question => {
+        const button = document.createElement("button");
+        button.classList.add("follow-up-button");
+        button.textContent = question;
+        button.onclick = () => handleFollowUp(question);
+        followUpContainer.appendChild(button);
+    });
+    console.log("followUpContainer is: ", followUpContainer);
+
+    chatMessages.appendChild(followUpContainer);
+    chatMessages.scrollTop = chatMessages.scrollHeight; // Ensure scrolling
+}
         function addMessage(message, type, followUpQuestions = null) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
-            
             if (type === 'ai') {
                 const container = document.createElement('div');
                 container.classList.add('ai-message-container');
@@ -306,13 +356,35 @@
                 let displayMessage;
                 try {
                     const parsedMessage = JSON.parse(message);
+                    console.log('parsedMessage:', parsedMessage);
                     displayMessage = parsedMessage.answer;
+                    console.log("displayMessage is: ", displayMessage);
                 } catch (e) {
-                    displayMessage = message;
+                    console.log("displayMessage123 is: ", message);
+                    showBotResponse(message, followUpQuestions);
+
+                    //showBotResponse(message);
+                    // if (followUpQuestions && followUpQuestions.length > 0) {
+                    //     const followUpContainer = document.createElement('div');
+                    //     followUpContainer.classList.add('follow-up-container');
+                        
+                    //     followUpQuestions.forEach(question => {
+                    //         const button = document.createElement('button');
+                    //         button.classList.add('follow-up-button');
+                    //         button.textContent = question;
+                    //         button.onclick = () => handleFollowUp(question);
+                    //         followUpContainer.appendChild(button);
+                    //     });
+                        
+                    //     container.appendChild(followUpContainer);
+                    //     chatMessages.appendChild(container);
+
+                    // }
                 }
                 
-                let formattedMessage = marked.parse(displayMessage);
-                messageDiv.innerHTML = formattedMessage;
+                //let formattedMessage = marked.parse(message);
+               // messageDiv.innerHTML = formattedMessage;
+                
                 
                 const speakButton = document.createElement('button');
                 speakButton.classList.add('speak-button');
@@ -320,24 +392,24 @@
                 speakButton.onclick = () => toggleSpeak(speakButton, displayMessage);
                 
                 container.appendChild(messageDiv);
-                container.appendChild(speakButton);
+                //container.appendChild(speakButton);
 
-                if (followUpQuestions && followUpQuestions.length > 0) {
-                    const followUpContainer = document.createElement('div');
-                    followUpContainer.classList.add('follow-up-container');
+                // if (followUpQuestions && followUpQuestions.length > 0) {
+                //     const followUpContainer = document.createElement('div');
+                //     followUpContainer.classList.add('follow-up-container');
                     
-                    followUpQuestions.forEach(question => {
-                        const button = document.createElement('button');
-                        button.classList.add('follow-up-button');
-                        button.textContent = question;
-                        button.onclick = () => handleFollowUp(question);
-                        followUpContainer.appendChild(button);
-                    });
+                //     followUpQuestions.forEach(question => {
+                //         const button = document.createElement('button');
+                //         button.classList.add('follow-up-button');
+                //         button.textContent = question;
+                //         button.onclick = () => handleFollowUp(question);
+                //         followUpContainer.appendChild(button);
+                //     });
                     
-                    container.appendChild(followUpContainer);
-                }
-                
-                chatMessages.appendChild(container);
+                //     container.appendChild(followUpContainer);
+                // }
+              
+                //console.log('container:', container);
                 // Show scroll indicator after AI response
                 setTimeout(() => showScrollIndicator(), 100);
             } else {
