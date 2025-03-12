@@ -747,3 +747,40 @@ textarea {
     background-color: #0056b3;
 }
 
+/* Add these styles to your index.css or within <style> tags in your HTML */
+.speaking-avatar {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    overflow: hidden;
+    z-index: 100; /* Ensure it's above other content */
+    display: none; /* Hide by default */
+  }
+  
+  .speaking-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .speaking-avatar.speaking {
+    display: block; /* Show avatar when speaking */
+    animation: mouthMove 0.5s infinite alternate;
+  }
+  
+  @keyframes mouthMove {
+    0% {
+      transform: scaleY(1);
+    }
+    50% {
+        transform: scaleY(1.1);
+    }
+    100% {
+      transform: scaleY(1);
+    }
+  }
+  
+
