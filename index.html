@@ -128,6 +128,8 @@
         //     document.body.innerHTML = '<h1>Admin Panel</h1><p>Welcome to the admin panel. Here you can manage the restaurant menu and settings.</p>';
         //     return;
         // }
+        let isProcessing = false; // Global flag to prevent multiple requests
+        let micPermissionGranted = false; 
         const urlParams = new URLSearchParams(window.location.search);
         const restaurantName = urlParams.get('restaurant'); 
         console.log("restaurantName is: ", restaurantName);
@@ -256,10 +258,53 @@
             addMessage(`Error updating menu: ${error.message}`, 'error');
             }
         }
+      // Track if permission has been granted
 
+// Request microphone permission once at page load
+async function requestMicrophonePermission() {
+    try {
+        // Try to get user media once when the page loads
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        
+        // If successful, set the flag to true
+        micPermissionGranted = true;
+        
+        // Keep the stream reference to maintain the permission
+        window.microphoneStream = stream;
+        
+        console.log("Microphone permission granted");
+        return true;
+    } catch (err) {
+        console.error("Could not get microphone permission:", err);
+        return false;
+    }
+}
         // Call updateMenu function after page load
         document.addEventListener('DOMContentLoaded', () => {
             updateMenu();
+            if (navigator.permissions) {
+        navigator.permissions.query({ name: 'microphone' })
+            .then(permissionStatus => {
+                console.log('Microphone permission status:', permissionStatus.state);
+                
+                // If already granted, set our flag
+                if (permissionStatus.state === 'granted') {
+                    micPermissionGranted = true;
+                } else if (permissionStatus.state === 'prompt') {
+                    // If we'll need to ask, do it early
+                    requestMicrophonePermission();
+                }
+                
+                // Listen for changes to permission
+                permissionStatus.onchange = () => {
+                    micPermissionGranted = (permissionStatus.state === 'granted');
+                    console.log('Permission state changed to:', permissionStatus.state);
+                };
+            });
+    } else {
+        // Fallback for browsers without Permissions API
+        requestMicrophonePermission();
+    }
         });
 
         async function handleFollowUp(question = null) {
@@ -454,7 +499,7 @@ function showFollowUpQuestions(followUpQuestions) {
 
         let isProcessing = false; // Global flag to prevent multiple requests
 
-async function toggleRecording() {
+        async function toggleRecording() {
     const button = document.getElementById('recordButton');
     const icon = button.querySelector('i');
     const followUpInput = document.getElementById('followUpInput');
@@ -479,9 +524,19 @@ async function toggleRecording() {
     // Toggle recording state
     if (!button.classList.contains('recording')) {
         try {
+            // If we don't have permission yet, request it first
+            if (!micPermissionGranted) {
+                const permissionGranted = await requestMicrophonePermission();
+                if (!permissionGranted) {
+                    addMessage("Please grant microphone access to use voice input.", 'error');
+                    return;
+                }
+            }
+            
+            // Initialize speech recognition
             recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
             recognition.continuous = false;
-            recognition.interimResults = false;  // No interim results needed
+            recognition.interimResults = false;
             
             recognition.onstart = () => {
                 button.classList.add('recording');
@@ -501,7 +556,7 @@ async function toggleRecording() {
                 // Submit the question
                 handleFollowUp(finalTranscript)
                     .finally(() => {
-                        // Reset processing flag when request completes (whether success or error)
+                        // Reset processing flag when request completes
                         isProcessing = false;
                     });
             };
@@ -509,10 +564,14 @@ async function toggleRecording() {
             recognition.onerror = (event) => {
                 console.error('Speech recognition error:', event.error);
                 resetMicrophoneButton();
+                
+                // If permission is denied, update our flag
+                if (event.error === 'not-allowed') {
+                    micPermissionGranted = false;
+                }
             };
             
             recognition.onend = () => {
-                // Only reset if we're not already processing (prevents conflicts)
                 if (!isProcessing) {
                     resetMicrophoneButton();
                 }
@@ -524,6 +583,7 @@ async function toggleRecording() {
             console.error('Error accessing speech recognition:', err);
             addMessage("Error: Microphone access failed.", 'error');
             resetMicrophoneButton();
+            micPermissionGranted = false;
         }
     } else {
         // If already recording, stop it
@@ -531,6 +591,15 @@ async function toggleRecording() {
     }
 }
 
+// The rest of your handleFollowUp function remains the same
+async function handleFollowUp(text) {
+    try {
+        // Your existing code to handle the follow-up question
+    } catch (error) {
+        console.error('Error handling follow-up:', error);
+        addMessage("Error processing your request.", 'error');
+    }
+}
 // Assuming handleFollowUp is an async function that handles the API request
 // Modify it to return a promise so we can track when it completes
 async function handleFollowUp(text) {
