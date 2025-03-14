@@ -133,10 +133,10 @@
           });
           micPermissionGranted = true;
           window.microphoneStream = stream;
-          console.log("Microphone permission granted");
+          //console.log("Microphone permission granted");
           return true;
         } catch (err) {
-          console.error("Could not get microphone permission:", err);
+          //console.error("Could not get microphone permission:", err);
           return false;
         }
       }
@@ -158,7 +158,7 @@
               );
             })
             .catch((error) => {
-              console.error("Error updating menu:", error);
+              //console.error("Error updating menu:", error);
               addMessage(`Error updating menu: ${error.message}`, "error");
             });
         }
@@ -270,7 +270,7 @@
           // Call showBotResponse here with parsed data
           showBotResponse(data.response, data.followUpQuestions);
         } catch (error) {
-          console.error("Error:", error);
+          //console.error("Error:", error);
           addMessage(
             `Error: ${error.message}. Please ensure the server is running and configured correctly.`,
             "error"
@@ -336,7 +336,7 @@
             };
 
             recognition.onerror = (event) => {
-              console.error("Speech recognition error:", event.error);
+              //console.error("Speech recognition error:", event.error);
               resetMicrophoneButton();
               if (event.error === "not-allowed") {
                 micPermissionGranted = false;
@@ -345,7 +345,7 @@
 
             recognition.start();
           } catch (err) {
-            console.error("Error accessing speech recognition:", err);
+            //console.error("Error accessing speech recognition:", err);
             addMessage("Error: Microphone access failed.", "error");
             resetMicrophoneButton();
             micPermissionGranted = false;
@@ -421,10 +421,10 @@
           navigator.permissions
             .query({ name: "microphone" })
             .then((permissionStatus) => {
-              console.log(
-                "Microphone permission status:",
-                permissionStatus.state
-              );
+              // console.log(
+              //   "Microphone permission status:",
+              //   permissionStatus.state
+              // );
 
               // If already granted, set our flag
               if (permissionStatus.state === "granted") {
@@ -436,10 +436,10 @@
               // Listen for changes to permission
               permissionStatus.onchange = () => {
                 micPermissionGranted = permissionStatus.state === "granted";
-                console.log(
-                  "Permission state changed to:",
-                  permissionStatus.state
-                );
+                // console.log(
+                //   "Permission state changed to:",
+                //   permissionStatus.state
+                // );
               };
             });
         } else {
@@ -471,7 +471,7 @@
           voiceMode = savedVoiceMode === "true";
         }
 
-        console.log("Initial voice mode:", voiceMode);
+        //console.log("Initial voice mode:", voiceMode);
 
         // Set up the voice mode button with correct initial state
         const controlBar = document.querySelector(".control-bar");
@@ -564,7 +564,7 @@
         // Start voice immediately if voice mode is on
         if (voiceMode) {
           setTimeout(() => {
-            console.log("Speaking text:", responseText);
+            //.log("Speaking text:", responseText);
             speakText(responseText);
         }, 100);
         }
@@ -663,7 +663,7 @@
 
       // Updated speakText function with debugging and fixes
 function speakText(text) {
-    console.log('Starting speech synthesis with voice mode:', voiceMode);
+    //.log('Starting speech synthesis with voice mode:', voiceMode);
     
     // Don't speak if voice mode is off
     if (!voiceMode) return;
@@ -688,16 +688,16 @@ function speakText(text) {
     
     // Clean the text for speech
     const cleanedText = cleanTextForSpeech(text);
-    console.log("Prepared text for speech:", cleanedText.substring(0, 50) + "...");
+    //console.log("Prepared text for speech:", cleanedText.substring(0, 50) + "...");
     
     // Create a new utterance
     currentUtterance = new SpeechSynthesisUtterance(cleanedText);
     
     // Load voices and log status
     if (!availableVoices || availableVoices.length === 0) {
-        console.log("Loading voices...");
+        //console.log("Loading voices...");
         availableVoices = speechSynthesis.getVoices();
-        console.log("Available voices:", availableVoices.length);
+        //console.log("Available voices:", availableVoices.length);
     }
     
     // Set preferred voice if available
@@ -720,7 +720,7 @@ function speakText(text) {
         }
         
         if (preferredVoice) {
-            console.log("Using voice:", preferredVoice.name);
+            //console.log("Using voice:", preferredVoice.name);
             currentUtterance.voice = preferredVoice;
         }
     }
@@ -732,12 +732,12 @@ function speakText(text) {
     
     // Add event listeners
     currentUtterance.onstart = function(event) {
-        console.log("Speech started successfully");
+        //console.log("Speech started successfully");
         isSpeaking = true;
     };
     
     currentUtterance.onend = function(event) {
-        console.log("Speech ended");
+        //console.log("Speech ended");
         isSpeaking = false;
         document.getElementById("stopSpeakingButton").style.display = "none";
         
@@ -748,7 +748,7 @@ function speakText(text) {
     };
     
     currentUtterance.onerror = function(event) {
-        console.error("Speech synthesis error:", event);
+        //console.error("Speech synthesis error:", event);
         isSpeaking = false;
         document.getElementById("stopSpeakingButton").style.display = "none";
         
@@ -761,12 +761,12 @@ function speakText(text) {
     // This approach works better in most browsers
     setTimeout(function() {
         try {
-            console.log("Attempting to speak...");
+            //console.log("Attempting to speak...");
             window.speechSynthesis.cancel(); // Clear any pending speech
             window.speechSynthesis.speak(currentUtterance);
-            console.log("Speech command sent to browser");
+            //console.log("Speech command sent to browser");
         } catch (err) {
-            console.error("Speech synthesis failed:", err);
+            //console.error("Speech synthesis failed:", err);
             isSpeaking = false;
             document.getElementById("stopSpeakingButton").style.display = "none";
             
@@ -884,7 +884,7 @@ function speakText(text) {
           // Call showBotResponse here with parsed data
           showBotResponse(data.response, data.followUpQuestions);
         } catch (error) {
-          console.error("Error:", error);
+          //console.error("Error:", error);
           addMessage(
             `Error: ${error.message}. Please ensure the server is running and configured correctly.`,
             "error"
@@ -896,7 +896,7 @@ function speakText(text) {
 
       function loadVoices() {
         availableVoices = speechSynthesis.getVoices();
-        console.log("Voices loaded:", availableVoices.length);
+        //console.log("Voices loaded:", availableVoices.length);
       }
 
       // Initialize voices
@@ -963,7 +963,7 @@ function speakText(text) {
             };
 
             recognition.onerror = (event) => {
-              console.error("Speech recognition error:", event.error);
+              //console.error("Speech recognition error:", event.error);
               resetMicrophoneButton();
               if (event.error === "not-allowed") {
                 micPermissionGranted = false;
