@@ -70,13 +70,13 @@
         const isAdmin = urlParams.get('admin');
 
         // Helper functions
-        function resetMicrophoneButton(button, icon, recognition) {
-            button.classList.remove('recording');
-            icon.className = 'fas fa-microphone';
-            if (recognition) {
-                recognition.stop();
-            }
-        }
+        // function resetMicrophoneButton(button, icon, recognition) {
+        //     button.classList.remove('recording');
+        //     icon.className = 'fas fa-microphone';
+        //     if (recognition) {
+        //         recognition.stop();
+        //     }
+        // }
 
         function showScrollIndicator() {
             const chatMessages = document.getElementById('chatMessages');
@@ -139,56 +139,6 @@
         // Save preference to localStorage
         localStorage.setItem('voiceMode', voiceMode);
     }
-        function toggleSpeak(button, text) {
-            const avatar = document.getElementById('speakingAvatar');
-            if (speaking) {
-                synthesis.cancel();
-                speaking = false;
-                button.classList.remove('speaking');
-                button.innerHTML = '<i class="fas fa-volume-up"></i>';
-                if (avatar) {
-                    avatar.classList.remove('speaking');
-                }
-                return;
-            }
-
-            const utterance = new SpeechSynthesisUtterance(text);
-            utterance.onend = () => {
-                speaking = false;
-                button.classList.remove('speaking');
-                button.innerHTML = '<i class="fas fa-volume-up"></i>';
-                if (avatar) {
-                    avatar.classList.remove('speaking');
-                }
-            };
-
-            utterance.onstart = () => {
-                if (avatar) {
-                    avatar.classList.add('speaking');
-                }
-            };
-
-            speaking = true;
-            button.classList.add('speaking');
-            button.innerHTML = '<i class="fas fa-stop"></i>';
-            synthesis.speak(utterance);
-        }
-       // Function to display bot response with typing effect
-    function showBotResponse(responseText, followUpQuestions) {
-        const chatMessages = document.getElementById("chatMessages");
-        
-        // Create a new message bubble
-        const botMessage = document.createElement("div");
-        botMessage.classList.add("message", "ai-message");  // Add CSS classes
-        chatMessages.appendChild(botMessage);
-        
-        // Start typing effect
-        typeText(botMessage, responseText, 50, () => {
-            showFollowUpQuestions(followUpQuestions);
-        });
-        // Scroll to the bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
-    }
 
     function showFollowUpQuestions(followUpQuestions) {
         if (!followUpQuestions || followUpQuestions.length === 0) return;
@@ -209,28 +159,6 @@
         chatMessages.scrollTop = chatMessages.scrollHeight; // Ensure scrolling
     }
 
-    function typeText(element, text, speed = 25, callback) {
-        let index = 0;
-        const avatar = document.getElementById('speakingAvatar');
-            
-        function type() {
-            if (index < text.length) {
-                element.innerHTML += text.charAt(index);
-                index++;
-                setTimeout(type, speed);
-            } else if (callback) {
-                callback();
-                if (avatar) {
-                    avatar.classList.remove('speaking');
-                }
-            }
-        }
-        if (avatar) {
-            avatar.classList.add('speaking');
-        }
-        type();
-    }
-
     function addMessage(message, type, followUpQuestions = null) {
             const chatMessages = document.getElementById('chatMessages');
             const messageDiv = document.createElement('div');
@@ -240,25 +168,18 @@
                 return; 
             }
             if (type === 'ai') {
-                let displayMessage;
-                try {
-                    const parsedMessage = JSON.parse(message);
-                    displayMessage = parsedMessage.answer;
-                } catch (e) {
-                    displayMessage = message;
-                    showBotResponse(message, followUpQuestions);
-
-                }
                 const container = document.createElement('div');
                 container.classList.add('ai-message-container');
                 messageDiv.classList.add('message', 'ai-message');
                 const speakButton = document.createElement('button');
                 speakButton.classList.add('speak-button');
                 speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-                speakButton.onclick = () => toggleSpeak(speakButton, displayMessage);
+                speakButton.onclick = () => toggleSpeak(speakButton, message);
                 container.appendChild(messageDiv);
                 container.appendChild(speakButton);
                 chatMessages.appendChild(container);
+                // Show scroll indicator after AI response
+                showScrollIndicator();
             } else {
                 messageDiv.classList.add('message');
                 messageDiv.textContent = message;
@@ -269,11 +190,49 @@
                     messageDiv.classList.add('user-message');
                 }
                  chatMessages.appendChild(messageDiv);
+                 // Show scroll indicator after AI response
+                 showScrollIndicator();
             }
 
-            // Show scroll indicator after AI response
-            setTimeout(() => showScrollIndicator(), 100);
+           
             chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        async function handleFollowUp(question = null) {
+            const followUpInput = document.getElementById('followUpInput');
+            const prompt = question || followUpInput.value.trim();
+            followUpInput.value = '';
+
+            if (!prompt) {
+                addMessage('Please enter a message', 'error');
+                return;
+            }
+
+            addMessage(prompt, 'user');
+
+            try {
+                const requestBody = { prompt };
+                const response = await fetch(`${API_BASE_URL}/continue-chat`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Server error: ${response.status}`);
+                }
+                 // Call showBotResponse here with parsed data
+                 showBotResponse(data.response, data.followUpQuestions);
+            } catch (error) {
+                console.error('Error:', error);
+                addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
+            } finally {
+               isProcessing = false;
+            }
         }
 
 
@@ -283,7 +242,6 @@
             const followUpInput = document.getElementById('followUpInput');
             const avatar = document.getElementById('speakingAvatar');
             let recognition = null;
-
             if (isProcessing) {
                 return;
             }
@@ -350,93 +308,6 @@
             }
         }
 
-        async function handleFollowUp(question = null) {
-            const followUpInput = document.getElementById('followUpInput');
-            const prompt = question || followUpInput.value.trim();
-            followUpInput.value = '';
-
-            if (!prompt) {
-                addMessage('Please enter a message', 'error');
-                return;
-            }
-
-            addMessage(prompt, 'user');
-
-            try {
-                const requestBody = { prompt };
-                const response = await fetch(`${API_BASE_URL}/continue-chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || `Server error: ${response.status}`);
-                }
-                addMessage(data.response, 'ai', data.followUpQuestions);
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
-            } finally {
-               isProcessing = false;
-            }
-        }
-    function speakText(text) {
-    // Don't speak if voice mode is off
-        if (!voiceMode) return;
-    
-    // Stop any current speech
-        stopSpeaking();
-    
-    // Clean the text for speech (remove markdown, code blocks, etc.)
-        const cleanedText = cleanTextForSpeech(text);
-    
-    // Create a new utterance
-        currentUtterance = new SpeechSynthesisUtterance(cleanedText);
-    
-    // Select voice (optional - can use system default)
-        const voices = speechSynthesis.getVoices();
-        if (voices.length > 0) {
-        // You can select a specific voice or let the user choose
-        // Example: find a female English voice
-            const preferredVoice = voices.find(voice => 
-            voice.lang.includes('en') && voice.name.includes('Female'));
-        
-        if (preferredVoice) {
-            currentUtterance.voice = preferredVoice;
-        }
-    }
-    
-    // Set properties
-    currentUtterance.rate = 1.0; // Speed of speech (0.1 to 10)
-    currentUtterance.pitch = 1.0; // Pitch (0 to 2)
-    currentUtterance.volume = 1.0; // Volume (0 to 1)
-    
-    // Add event listeners
-    currentUtterance.onstart = () => {
-        isSpeaking = true;
-        document.getElementById('stopSpeakingButton').style.display = 'inline-block';
-    };
-    
-    currentUtterance.onend = () => {
-        isSpeaking = false;
-        document.getElementById('stopSpeakingButton').style.display = 'none';
-        currentUtterance = null;
-    };
-    
-    currentUtterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
-        isSpeaking = false;
-        document.getElementById('stopSpeakingButton').style.display = 'none';
-    };
-    
-    // Start speaking
-    speechSynthesis.speak(currentUtterance);
-}
 
 // Function to stop speaking
 function stopSpeaking() {
@@ -468,47 +339,6 @@ function cleanTextForSpeech(text) {
     
     return text;
 }
-
-// Modify your existing handleFollowUp function to speak responses
-async function handleFollowUp(question = null) {
-            const followUpInput = document.getElementById('followUpInput');
-            const prompt = question || followUpInput.value.trim();
-            followUpInput.value = '';
-            // Show loading indicator
-            addMessage(prompt, 'user');
-            const loadingIndicator = document.getElementById('loadingIndicator');
-            if (loadingIndicator) loadingIndicator.style.display = 'block';
-
-            if (!prompt) {
-                addMessage('Please enter a message', 'error');
-                return;
-            }
-
-            try {
-                const requestBody = { prompt };
-                const response = await fetch(`${API_BASE_URL}/continue-chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || `Server error: ${response.status}`);
-                }
-                 addMessage(data.response, 'ai', data.followUpQuestions);
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
-            } finally {
-               isProcessing = false;
-               if (loadingIndicator) loadingIndicator.style.display = 'none';
-            }
-        }
-
 
         // Event listeners and initializations
         document.addEventListener('DOMContentLoaded', () => {
@@ -643,7 +473,354 @@ style.textContent = `
 }
 `;
 document.head.appendChild(style);
+// I've identified and fixed the following issues:
+// 1. Modified showBotResponse to trigger voice output when voice mode is enabled
+// 2. Fixed issues with the avatar animation during speech
+// 3. Connected the voice system with the message display system
+// 4. Ensured proper coordination between text display and speech
 
+// function showBotResponse(responseText, followUpQuestions) {
+//   const chatMessages = document.getElementById("chatMessages");
+  
+//   // Create a new message bubble
+//   const container = document.createElement("div");
+//   container.classList.add("ai-message-container");
+  
+//   const botMessage = document.createElement("div");
+//   botMessage.classList.add("message", "ai-message");
+  
+//   const speakButton = document.createElement("button");
+//   speakButton.classList.add("speak-button");
+//   speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+//   speakButton.onclick = () => toggleSpeak(speakButton, responseText);
+  
+//   container.appendChild(botMessage);
+//   container.appendChild(speakButton);
+//   chatMessages.appendChild(container);
+  
+//   // Start typing effect
+//   typeText(botMessage, responseText, 50, () => {
+//     showFollowUpQuestions(followUpQuestions);
+    
+//     // Auto-speak response if voice mode is enabled
+//     if (voiceMode) {
+//       speakText(responseText);
+//     }
+//   });
+  
+//   // Scroll to the bottom
+//   chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+//   // Show scroll indicator
+//   showScrollIndicator();
+// }
+
+function showBotResponse(responseText, followUpQuestions) {
+    const chatMessages = document.getElementById("chatMessages");
+
+    // Create a new message bubble
+    const container = document.createElement("div");
+    container.classList.add("ai-message-container");
+
+    const botMessage = document.createElement("div");
+    botMessage.classList.add("message", "ai-message");
+
+    const speakButton = document.createElement("button");
+    speakButton.classList.add("speak-button");
+    speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+    speakButton.onclick = () => toggleSpeak(speakButton, responseText);
+
+    container.appendChild(botMessage);
+    container.appendChild(speakButton);
+    chatMessages.appendChild(container);
+
+    // Start typing effect
+    typeText(botMessage, responseText, 50, () => {
+    showFollowUpQuestions(followUpQuestions);
+    });
+     // Auto-speak response if voice mode is enabled
+        if (voiceMode) {
+          speakText(responseText);
+        }
+
+    // Scroll to the bottom
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    // Show scroll indicator
+    showScrollIndicator();
+}
+
+function typeText(element, text, speed = 25, callback) {
+  let index = 0;
+  const avatar = document.getElementById('speakingAvatar');
+  
+  function type() {
+    if (index < text.length) {
+      element.innerHTML += text.charAt(index);
+      index++;
+      setTimeout(type, speed);
+    } else if (callback) {
+      callback();
+      // Don't remove speaking class here if we're going to speak
+      // This will be handled by speech events
+    }
+  }
+  
+  if (avatar) {
+    avatar.classList.add('speaking');
+  }
+  
+  type();
+}
+
+function speakText(text) {
+  // Don't speak if voice mode is off
+  if (!voiceMode) return;
+  
+  // Stop any current speech
+  stopSpeaking();
+  
+  // Clean the text for speech (remove markdown, code blocks, etc.)
+  const cleanedText = cleanTextForSpeech(text);
+  
+  // Create a new utterance
+  currentUtterance = new SpeechSynthesisUtterance(cleanedText);
+  
+  // Select voice (optional - can use system default)
+  const voices = speechSynthesis.getVoices();
+  if (voices.length > 0) {
+    // Example: find a female English voice
+    const preferredVoice = voices.find(voice =>
+      voice.lang.includes('en') && voice.name.includes('Female'));
+    if (preferredVoice) {
+      currentUtterance.voice = preferredVoice;
+    }
+  }
+  
+  // Set properties
+ // currentUtterance.rate = 1.0; // Speed of speech (0.1 to 10)
+ // currentUtterance.pitch = 1.0; // Pitch (0 to 2)
+ // currentUtterance.volume = 1.0; // Volume (0 to 1)
+  
+  // Add event listeners
+  currentUtterance.onstart = () => {
+    isSpeaking = true;
+    document.getElementById('stopSpeakingButton').style.display = 'inline-block';
+    const avatar = document.getElementById('speakingAvatar');
+    if (avatar) {
+      avatar.classList.add('speaking');
+    }
+  };
+  
+  currentUtterance.onend = () => {
+    isSpeaking = false;
+    document.getElementById('stopSpeakingButton').style.display = 'none';
+    currentUtterance = null;
+    const avatar = document.getElementById('speakingAvatar');
+    if (avatar) {
+      avatar.classList.remove('speaking');
+    }
+  };
+  
+  currentUtterance.onerror = (event) => {
+    console.error('Speech synthesis error:', event);
+    isSpeaking = false;
+    document.getElementById('stopSpeakingButton').style.display = 'none';
+    const avatar = document.getElementById('speakingAvatar');
+    if (avatar) {
+      avatar.classList.remove('speaking');
+    }
+  };
+  
+  // Start speaking
+  speechSynthesis.speak(currentUtterance);
+}
+
+function stopSpeaking() {
+  if (isSpeaking) {
+    speechSynthesis.cancel();
+    isSpeaking = false;
+    document.getElementById('stopSpeakingButton').style.display = 'none';
+    currentUtterance = null;
+    const avatar = document.getElementById('speakingAvatar');
+    if (avatar) {
+      avatar.classList.remove('speaking');
+    }
+  }
+}
+
+function toggleSpeak(button, text) {
+  const avatar = document.getElementById('speakingAvatar');
+  
+  if (speaking) {
+    synthesis.cancel();
+    speaking = false;
+    button.classList.remove('speaking');
+    button.innerHTML = '<i class="fas fa-volume-up"></i>';
+    if (avatar) {
+      avatar.classList.remove('speaking');
+    }
+    return;
+  }
+  
+  const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
+  
+  utterance.onend = () => {
+    speaking = false;
+    button.classList.remove('speaking');
+    button.innerHTML = '<i class="fas fa-volume-up"></i>';
+    if (avatar) {
+      avatar.classList.remove('speaking');
+    }
+  };
+  
+  utterance.onstart = () => {
+    if (avatar) {
+      avatar.classList.add('speaking');
+    }
+  };
+  
+  speaking = true;
+  button.classList.add('speaking');
+  button.innerHTML = '<i class="fas fa-stop"></i>';
+  
+  synthesis.speak(utterance);
+}
+
+// Clean text for better speech synthesis
+function cleanTextForSpeech(text) {
+  // Remove code blocks
+  text = text.replace(/```[\s\S]*?```/g, "Code block omitted for speech.");
+  
+  // Remove markdown formatting
+  text = text.replace(/\*\*(.*?)\*\*/g, "$1"); // Bold
+  text = text.replace(/\*(.*?)\*/g, "$1"); // Italic
+  text = text.replace(/\[(.*?)\]\(.*?\)/g, "$1"); // Links
+  text = text.replace(/#{1,6}\s(.*?)(?:\n|$)/g, "$1. "); // Headers
+  
+  // Replace bullet points for better speech pauses
+  text = text.replace(/- (.*?)(?:\n|$)/g, "$1. ");
+  text = text.replace(/\d+\. (.*?)(?:\n|$)/g, "$1. ");
+  
+  // Add pauses for better speech flow
+  text = text.replace(/\n\n/g, ". ");
+  
+  return text;
+}
+
+async function handleFollowUp(question = null) {
+  const followUpInput = document.getElementById('followUpInput');
+  const prompt = question || followUpInput.value.trim();
+  followUpInput.value = '';
+  
+  if (!prompt) {
+    addMessage('Please enter a message', 'error');
+    return;
+  }
+  
+  addMessage(prompt, 'user');
+  
+  try {
+    const requestBody = { prompt };
+    const response = await fetch(`${API_BASE_URL}/continue-chat`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.error || `Server error: ${response.status}`);
+    }
+    
+    // Call showBotResponse here with parsed data
+    showBotResponse(data.response, data.followUpQuestions);
+    
+  } catch (error) {
+    console.error('Error:', error);
+    addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
+  } finally {
+    isProcessing = false;
+  }
+}
+
+async function toggleRecording() {
+  const button = document.getElementById('recordButton');
+  const icon = button.querySelector('i');
+  const followUpInput = document.getElementById('followUpInput');
+  const avatar = document.getElementById('speakingAvatar');
+  let recognition = null;
+  
+  if (isProcessing) {
+    return;
+  }
+  
+  function resetMicrophoneButton() {
+    button.classList.remove('recording');
+    icon.className = 'fas fa-microphone';
+    if (recognition) {
+      recognition.stop();
+      recognition = null;
+    }
+  }
+  
+  if (!button.classList.contains('recording')) {
+    try {
+      if (!micPermissionGranted) {
+        const permissionGranted = await requestMicrophonePermission();
+        if (!permissionGranted) {
+          addMessage("Please grant microphone access to use voice input.", 'error');
+          return;
+        }
+      }
+      
+      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      
+      recognition.onstart = () => {
+        button.classList.add('recording');
+        icon.className = 'fas fa-stop';
+      };
+      
+      recognition.onresult = (event) => {
+        const finalTranscript = event.results[0][0].transcript.trim();
+        followUpInput.value = finalTranscript;
+        resetMicrophoneButton();
+        isProcessing = true;
+        
+        handleFollowUp(finalTranscript)
+          .finally(() => {
+            isProcessing = false;
+          });
+      };
+      
+      recognition.onend = () => {
+        resetMicrophoneButton();
+      };
+      
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        resetMicrophoneButton();
+        if (event.error === 'not-allowed') {
+          micPermissionGranted = false;
+        }
+      };
+      
+      recognition.start();
+    } catch (err) {
+      console.error('Error accessing speech recognition:', err);
+      addMessage("Error: Microphone access failed.", 'error');
+      resetMicrophoneButton();
+      micPermissionGranted = false;
+    }
+  } else {
+    resetMicrophoneButton();
+  }
+}
     </script>
 </body>
 

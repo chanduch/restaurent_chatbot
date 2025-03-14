@@ -101,7 +101,6 @@ body {
     background-color: #007bff;
     margin-right: auto;
     color: var(--text-primary);
-    display: none;
 }
 
 .ai-message h1, .ai-message h2, .ai-message h3 {
@@ -139,7 +138,6 @@ body {
 }
 
 button {
-    padding: 0 25px;
     background-color: #4a5568;
     color: #fff;
     border: none;
@@ -782,5 +780,35 @@ textarea {
       transform: scaleY(1);
     }
   }
+
+
+  .control-button {
+    background: none;
+    border: 1px solid #ccc;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    margin: 0 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.control-button:hover {
+    background-color: #f0f0f0;
+}
+
+.control-button.active {
+    background-color: #4285f4;
+    color: white;
+    border-color: #4285f4;
+}
+
+#stopSpeakingButton {
+    background-color: #ff4444;
+    color: white;
+    border-color: #ff4444;
+}
+
+
   
 

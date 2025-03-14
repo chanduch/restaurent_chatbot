@@ -50,7 +50,6 @@ async function fetchMenuFromGoogleSheets(restaurant) {
         
         const response = await axios.get(url);
         globalMenuContent = response.data;
-        //console.log('Menu data updated', response.data);
         return response.data;
     } catch (error) {
         console.error('Error fetching menu:', error);
@@ -148,6 +147,8 @@ app.post('/continue-chat', async (req, res) => {
         }
 
         const result = await chat.sendMessage([{ text: messageText }]);
+        // Cache the response to improve response time
+
         let responseText = await result.response.text();
 
         // Remove ```json prefix and ``` suffix from the response
