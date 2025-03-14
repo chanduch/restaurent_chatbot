@@ -1195,6 +1195,8 @@ function checkSpeechSupport() {
             };
 
             recognition.onresult = (event) => {
+              if (!voiceMode) 
++                toggleVoiceMode();
               const finalTranscript = event.results[0][0].transcript.trim();
               followUpInput.value = finalTranscript;
               resetMicrophoneButton();
