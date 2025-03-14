@@ -397,6 +397,49 @@
 
       // Event listeners and initializations
       document.addEventListener("DOMContentLoaded", () => {
+        const speechSupported = checkSpeechSupport();
+    
+    // Initialize voices if speech is supported
+    if (speechSupported) {
+        //initializeVoices();
+        
+        // For mobile Safari (iOS), we need a user interaction to enable speech
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            // Create a start button for iOS
+            const iosStartButton = document.createElement("button");
+            iosStartButton.id = "iosStartButton";
+            iosStartButton.className = "control-button";
+            iosStartButton.innerHTML = '<i class="fas fa-play"></i> Enable Voice';
+            iosStartButton.title = "Enable voice on iOS";
+            iosStartButton.onclick = function() {
+                // Play a silent utterance to unlock speech synthesis
+                const unlockUtterance = new SpeechSynthesisUtterance('');
+                unlockUtterance.volume = 0;
+                speechSynthesis.speak(unlockUtterance);
+                
+                // Hide the button after clicking
+                this.style.display = "none";
+                
+                // Show a confirmation message
+                addMessage("Voice response enabled!", "system");
+            };
+            
+            // Add to control bar
+            const controlBar = document.querySelector(".control-bar");
+            if (controlBar) {
+                controlBar.appendChild(iosStartButton);
+            }
+        }
+    }
+
+        // For Chrome on any platform - fix the timeout issue
+        setInterval(() => {
+        if (isSpeaking && speechSynthesis.speaking) {
+            speechSynthesis.pause();
+            speechSynthesis.resume();
+        }
+    }, 10000);
+
         if (restaurantName) {
           document.title = `${restaurantName} Menu AI Chat`;
           const logoText = document.querySelector(".logo-text");
@@ -662,11 +705,131 @@
       // }
 
       // Updated speakText function with debugging and fixes
+// function speakText(text) {
+//     //.log('Starting speech synthesis with voice mode:', voiceMode);
+    
+//     // Don't speak if voice mode is off
+//     if (!voiceMode) return;
+    
+//     // Stop any current speech
+//     if (isSpeaking) {
+//         stopSpeaking();
+//     }
+    
+//     // Set status first
+//     isSpeaking = true;
+    
+//     // Show stop button
+//     document.getElementById("stopSpeakingButton").style.display = "inline-block";
+    
+//     // Show and animate avatar
+//     const avatar = document.getElementById("speakingAvatar");
+//     if (avatar) {
+//         avatar.style.display = "block";
+//         avatar.classList.add("speaking");
+//     }
+    
+//     // Clean the text for speech
+//     const cleanedText = cleanTextForSpeech(text);
+//     //console.log("Prepared text for speech:", cleanedText.substring(0, 50) + "...");
+    
+//     // Create a new utterance
+//     currentUtterance = new SpeechSynthesisUtterance(cleanedText);
+    
+//     // Load voices and log status
+//     if (!availableVoices || availableVoices.length === 0) {
+//         //console.log("Loading voices...");
+//         availableVoices = speechSynthesis.getVoices();
+//         //console.log("Available voices:", availableVoices.length);
+//     }
+    
+//     // Set preferred voice if available
+//     if (availableVoices && availableVoices.length > 0) {
+//         // First try to find a female English voice
+//         let preferredVoice = availableVoices.find(
+//             (voice) => voice.lang.includes("en") && voice.name.toLowerCase().includes("female")
+//         );
+        
+//         // If not found, try any English voice
+//         if (!preferredVoice) {
+//             preferredVoice = availableVoices.find(
+//                 (voice) => voice.lang.includes("en")
+//             );
+//         }
+        
+//         // If still not found, use the first voice
+//         if (!preferredVoice && availableVoices.length > 0) {
+//             preferredVoice = availableVoices[0];
+//         }
+        
+//         if (preferredVoice) {
+//             //console.log("Using voice:", preferredVoice.name);
+//             currentUtterance.voice = preferredVoice;
+//         }
+//     }
+    
+//     // Make sure to set these properties before adding event listeners
+//     currentUtterance.rate = 1.0;
+//     currentUtterance.pitch = 1.0;
+//     currentUtterance.volume = 1.0;
+    
+//     // Add event listeners
+//     currentUtterance.onstart = function(event) {
+//         //console.log("Speech started successfully");
+//         isSpeaking = true;
+//     };
+    
+//     currentUtterance.onend = function(event) {
+//         //console.log("Speech ended");
+//         isSpeaking = false;
+//         document.getElementById("stopSpeakingButton").style.display = "none";
+        
+//         if (avatar) {
+//             avatar.classList.remove("speaking");
+//             avatar.style.display = "none"; // Hide the avatar completely when speech ends
+//         }
+//     };
+    
+//     currentUtterance.onerror = function(event) {
+//         //console.error("Speech synthesis error:", event);
+//         isSpeaking = false;
+//         document.getElementById("stopSpeakingButton").style.display = "none";
+        
+//         if (avatar) {
+//             avatar.classList.remove("speaking");
+//         }
+//     };
+    
+//     // Speech synthesis is actually quite finicky in browsers
+//     // This approach works better in most browsers
+//     setTimeout(function() {
+//         try {
+//             //console.log("Attempting to speak...");
+//             window.speechSynthesis.cancel(); // Clear any pending speech
+//             window.speechSynthesis.speak(currentUtterance);
+//             //console.log("Speech command sent to browser");
+//         } catch (err) {
+//             //console.error("Speech synthesis failed:", err);
+//             isSpeaking = false;
+//             document.getElementById("stopSpeakingButton").style.display = "none";
+            
+//             if (avatar) {
+//                 avatar.classList.remove("speaking");
+//             }
+//         }
+//     }, 100);
+// }
+
+// Modified speakText function with mobile browser compatibility
 function speakText(text) {
-    //.log('Starting speech synthesis with voice mode:', voiceMode);
+    console.log('Starting speech synthesis with voice mode:', voiceMode);
     
     // Don't speak if voice mode is off
     if (!voiceMode) return;
+    
+    // Mobile browser detection
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    console.log("Is mobile device:", isMobile);
     
     // Stop any current speech
     if (isSpeaking) {
@@ -688,109 +851,193 @@ function speakText(text) {
     
     // Clean the text for speech
     const cleanedText = cleanTextForSpeech(text);
-    //console.log("Prepared text for speech:", cleanedText.substring(0, 50) + "...");
     
-    // Create a new utterance
-    currentUtterance = new SpeechSynthesisUtterance(cleanedText);
+    // For better mobile compatibility, break text into smaller chunks
+    // Mobile browsers often have limitations with long texts
+    const maxChunkLength = isMobile ? 150 : 1000;
+    const textChunks = [];
     
-    // Load voices and log status
+    // Split text into sentences first
+    const sentences = cleanedText.split(/(?<=\.|\?|\!)\s+/);
+    let currentChunk = "";
+    
+    sentences.forEach(sentence => {
+        if ((currentChunk + sentence).length <= maxChunkLength) {
+            currentChunk += sentence + " ";
+        } else {
+            if (currentChunk) textChunks.push(currentChunk.trim());
+            currentChunk = sentence + " ";
+        }
+    });
+    
+    if (currentChunk) textChunks.push(currentChunk.trim());
+    
+    console.log(`Split speech into ${textChunks.length} chunks`);
+    
+    // Load voices
     if (!availableVoices || availableVoices.length === 0) {
-        //console.log("Loading voices...");
         availableVoices = speechSynthesis.getVoices();
-        //console.log("Available voices:", availableVoices.length);
     }
     
-    // Set preferred voice if available
-    if (availableVoices && availableVoices.length > 0) {
-        // First try to find a female English voice
-        let preferredVoice = availableVoices.find(
-            (voice) => voice.lang.includes("en") && voice.name.toLowerCase().includes("female")
-        );
-        
-        // If not found, try any English voice
-        if (!preferredVoice) {
-            preferredVoice = availableVoices.find(
-                (voice) => voice.lang.includes("en")
-            );
+    // Function to speak one chunk
+    let chunkIndex = 0;
+    function speakNextChunk() {
+        if (chunkIndex >= textChunks.length || !isSpeaking) {
+            console.log("Finished speaking all chunks");
+            setTimeout(() => {
+                if (isSpeaking) {
+                    isSpeaking = false;
+                    document.getElementById("stopSpeakingButton").style.display = "none";
+                    
+                    if (avatar) {
+                        avatar.classList.remove("speaking");
+                    }
+                }
+            }, 500);
+            return;
         }
         
-        // If still not found, use the first voice
-        if (!preferredVoice && availableVoices.length > 0) {
-            preferredVoice = availableVoices[0];
-        }
+        const chunk = textChunks[chunkIndex];
+        console.log(`Speaking chunk ${chunkIndex + 1}/${textChunks.length}`);
         
-        if (preferredVoice) {
-            //console.log("Using voice:", preferredVoice.name);
-            currentUtterance.voice = preferredVoice;
-        }
-    }
-    
-    // Make sure to set these properties before adding event listeners
-    currentUtterance.rate = 1.0;
-    currentUtterance.pitch = 1.0;
-    currentUtterance.volume = 1.0;
-    
-    // Add event listeners
-    currentUtterance.onstart = function(event) {
-        //console.log("Speech started successfully");
-        isSpeaking = true;
-    };
-    
-    currentUtterance.onend = function(event) {
-        //console.log("Speech ended");
-        isSpeaking = false;
-        document.getElementById("stopSpeakingButton").style.display = "none";
+        currentUtterance = new SpeechSynthesisUtterance(chunk);
         
-        if (avatar) {
-            avatar.classList.remove("speaking");
-            avatar.style.display = "none"; // Hide the avatar completely when speech ends
-        }
-    };
-    
-    currentUtterance.onerror = function(event) {
-        //console.error("Speech synthesis error:", event);
-        isSpeaking = false;
-        document.getElementById("stopSpeakingButton").style.display = "none";
-        
-        if (avatar) {
-            avatar.classList.remove("speaking");
-        }
-    };
-    
-    // Speech synthesis is actually quite finicky in browsers
-    // This approach works better in most browsers
-    setTimeout(function() {
-        try {
-            //console.log("Attempting to speak...");
-            window.speechSynthesis.cancel(); // Clear any pending speech
-            window.speechSynthesis.speak(currentUtterance);
-            //console.log("Speech command sent to browser");
-        } catch (err) {
-            //console.error("Speech synthesis failed:", err);
-            isSpeaking = false;
-            document.getElementById("stopSpeakingButton").style.display = "none";
+        // Set voice properties
+        if (availableVoices && availableVoices.length > 0) {
+            // Try to find a suitable voice
+            let preferredVoice = null;
             
-            if (avatar) {
-                avatar.classList.remove("speaking");
+            // For iOS, use a specific approach
+            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+                preferredVoice = availableVoices.find(v => 
+                    v.name.includes('Samantha') || v.name.includes('Karen') || 
+                    (v.lang.includes('en') && v.name.includes('Female')));
+            } else {
+                preferredVoice = availableVoices.find(v => 
+                    v.lang.includes('en') && 
+                    (v.name.includes('Female') || v.name.toLowerCase().includes('female')));
+            }
+            
+            // Fallback to any English voice
+            if (!preferredVoice) {
+                preferredVoice = availableVoices.find(v => v.lang.includes('en'));
+            }
+            
+            // Last resort: first available voice
+            if (!preferredVoice && availableVoices.length > 0) {
+                preferredVoice = availableVoices[0];
+            }
+            
+            if (preferredVoice) {
+                console.log("Using voice:", preferredVoice.name);
+                currentUtterance.voice = preferredVoice;
             }
         }
-    }, 100);
+        
+        // Set properties - mobile devices usually need slower speech
+        currentUtterance.rate = isMobile ? 0.9 : 1.0;
+        currentUtterance.pitch = 1.0;
+        currentUtterance.volume = 1.0;
+        
+        // Handle events
+        currentUtterance.onend = function() {
+            console.log(`Chunk ${chunkIndex + 1} complete`);
+            chunkIndex++;
+            // Small delay between chunks for better mobile compatibility
+            setTimeout(speakNextChunk, isMobile ? 300 : 50);
+        };
+        
+        currentUtterance.onerror = function(event) {
+            console.error(`Error speaking chunk ${chunkIndex + 1}:`, event);
+            // Try to recover by moving to the next chunk
+            chunkIndex++;
+            setTimeout(speakNextChunk, 500);
+        };
+        
+        try {
+            speechSynthesis.speak(currentUtterance);
+        } catch (err) {
+            console.error("Speech synthesis failed:", err);
+            // Try to recover
+            chunkIndex++;
+            setTimeout(speakNextChunk, 500);
+        }
+    }
+    
+    // Mobile browsers require user interaction before allowing speech
+    // This helps handle that requirement
+    if (isMobile) {
+        // For iOS Safari specifically
+        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+            // Try to use a dummy utterance to unlock speech
+            const unlockUtterance = new SpeechSynthesisUtterance('');
+            unlockUtterance.volume = 0; // Silent
+            unlockUtterance.onend = function() {
+                console.log("iOS speech unlocked");
+                setTimeout(speakNextChunk, 100);
+            };
+            speechSynthesis.speak(unlockUtterance);
+        } else {
+            // For other mobile browsers
+            setTimeout(speakNextChunk, 300);
+        }
+    } else {
+        // Desktop browsers
+        setTimeout(speakNextChunk, 100);
+    }
+}
+function stopSpeaking() {
+    console.log("Stopping speech");
+    isSpeaking = false;
+    
+    // Need to cancel completely for mobile browsers
+    window.speechSynthesis.cancel();
+    
+    document.getElementById("stopSpeakingButton").style.display = "none";
+    currentUtterance = null;
+    
+    const avatar = document.getElementById("speakingAvatar");
+    if (avatar) {
+        avatar.classList.remove("speaking");
+    }
 }
 
-
-      function stopSpeaking() {
-        if (isSpeaking) {
-          speechSynthesis.cancel();
-          isSpeaking = false;
-          document.getElementById("stopSpeakingButton").style.display = "none";
-          currentUtterance = null;
-          const avatar = document.getElementById("speakingAvatar");
-          if (avatar) {
-            avatar.style.display = "none";
-            avatar.classList.remove("speaking");
-          }
+// Add this function to detect if the browser supports speech synthesis
+function checkSpeechSupport() {
+    const support = {
+        speechSynthesis: 'speechSynthesis' in window,
+        speechSynthesisUtterance: 'SpeechSynthesisUtterance' in window
+    };
+    
+    console.log("Speech synthesis support:", support);
+    
+    // Enable/disable voice features based on support
+    if (!support.speechSynthesis || !support.speechSynthesisUtterance) {
+        console.warn("Speech synthesis not supported in this browser");
+        // Disable voice mode
+        voiceMode = false;
+        
+        // Hide voice controls
+        const voiceModeButton = document.getElementById("voiceModeButton");
+        if (voiceModeButton) {
+            voiceModeButton.style.display = "none";
         }
-      }
+        
+        const stopSpeakingButton = document.getElementById("stopSpeakingButton");
+        if (stopSpeakingButton) {
+            stopSpeakingButton.style.display = "none";
+        }
+        
+        // Hide speak buttons on messages
+        const speakButtons = document.querySelectorAll(".speak-button");
+        speakButtons.forEach(button => {
+            button.style.display = "none";
+        });
+    }
+    
+    return support.speechSynthesis && support.speechSynthesisUtterance;
+}
+
 
       // Fixed toggleSpeak function for manual speech button
       function toggleSpeak(button, text) {
