@@ -1,450 +1,514 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Restaurant AI Chatbot</title>
-    <link rel="stylesheet" href="index.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap">
-</head>
+    <link rel="stylesheet" href="index.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
+    />
+  </head>
 
-<body>
+  <body>
     <header class="header">
-        <svg class="logo" id="restaurant-logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-            <defs>
-                <pattern id="imagePattern" patternUnits="userSpaceOnUse" width="100" height="100">
-                    <image id="logo-image" x="0" y="0" width="100" height="100"></image>
-                </pattern>
-            </defs>
-            <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
-        </svg>
-        <span class="logo-text">Restaurant Chatbot</span>
-        <button id="updateMenuBtn" class="update-menu-btn" onclick="updateMenu()" style="display: none;">
-            Update Menu
-        </button>
+      <svg
+        class="logo"
+        id="restaurant-logo"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 100 100"
+      >
+        <defs>
+          <pattern
+            id="imagePattern"
+            patternUnits="userSpaceOnUse"
+            width="100"
+            height="100"
+          >
+            <image id="logo-image" x="0" y="0" width="100" height="100"></image>
+          </pattern>
+        </defs>
+        <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
+      </svg>
+      <span class="logo-text">Restaurant Chatbot</span>
+      <button
+        id="updateMenuBtn"
+        class="update-menu-btn"
+        onclick="updateMenu()"
+        style="display: none"
+      >
+        Update Menu
+      </button>
     </header>
 
     <div class="control-bar"></div>
 
     <div id="speakingAvatar" class="speaking-avatar">
-        <img src="chatbot-avatar.png" alt="Chatbot Avatar" />
+      <img src="chatbot-avatar.png" alt="Chatbot Avatar" />
     </div>
 
     <div class="chat-container">
-        <div class="chat-messages" id="chatMessages"></div>
-        <div id="scrollIndicator" class="scroll-indicator" onclick="scrollToBottom()">
-            <i class="fas fa-chevron-down"></i>
+      <div class="chat-messages" id="chatMessages"></div>
+      <div
+        id="scrollIndicator"
+        class="scroll-indicator"
+        onclick="scrollToBottom()"
+      >
+        <i class="fas fa-chevron-down"></i>
+      </div>
+      <div class="input-container">
+        <div class="input-wrapper">
+          <textarea
+            id="followUpInput"
+            placeholder="Enter your message..."
+            rows="2"
+          ></textarea>
+          <div class="input-buttons">
+            <button
+              class="icon-button mic-button"
+              id="recordButton"
+              onclick="toggleRecording()"
+            >
+              <i class="fas fa-microphone"></i>
+            </button>
+            <button class="icon-button send-button" onclick="handleFollowUp()">
+              <i class="fas fa-paper-plane"></i>
+            </button>
+          </div>
         </div>
-        <div class="input-container">
-            <div class="input-wrapper">
-                <textarea id="followUpInput" placeholder="Enter your message..." rows="2"></textarea>
-                <div class="input-buttons">
-                    <button class="icon-button mic-button" id="recordButton" onclick="toggleRecording()">
-                        <i class="fas fa-microphone"></i>
-                    </button>
-                    <button class="icon-button send-button" onclick="handleFollowUp()">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-        const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
-        let isProcessing = false;
-        let micPermissionGranted = false;
-        let speaking = false;
-        let synthesis = window.speechSynthesis;
-        let speechSynthesis = window.speechSynthesis;
-        let isSpeaking = false;
-        let currentUtterance = null;
-        let voiceMode = false; // Toggle for voice mode
+      const API_BASE_URL = `${window.location.protocol}//${window.location.hostname}:${window.location.port}`;
+      let isProcessing = false;
+      let micPermissionGranted = false;
+      let speaking = false;
+      let synthesis = window.speechSynthesis;
+      let speechSynthesis = window.speechSynthesis;
+      let isSpeaking = false;
+      let currentUtterance = null;
+      let availableVoices = [];
+      let voiceMode = false; // Toggle for voice mode
 
+      const urlParams = new URLSearchParams(window.location.search);
+      const restaurantName = urlParams.get("restaurant");
+      const isAdmin = urlParams.get("admin");
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const restaurantName = urlParams.get('restaurant');
-        const isAdmin = urlParams.get('admin');
+      // Helper functions
+      // function resetMicrophoneButton(button, icon, recognition) {
+      //     button.classList.remove('recording');
+      //     icon.className = 'fas fa-microphone';
+      //     if (recognition) {
+      //         recognition.stop();
+      //     }
+      // }
 
-        // Helper functions
-        // function resetMicrophoneButton(button, icon, recognition) {
-        //     button.classList.remove('recording');
-        //     icon.className = 'fas fa-microphone';
-        //     if (recognition) {
-        //         recognition.stop();
-        //     }
-        // }
+      function showScrollIndicator() {
+        const chatMessages = document.getElementById("chatMessages");
+        const scrollIndicator = document.getElementById("scrollIndicator");
+        scrollIndicator.classList.toggle(
+          "visible",
+          chatMessages.scrollHeight >
+            chatMessages.clientHeight + chatMessages.scrollTop + 100
+        );
+      }
 
-        function showScrollIndicator() {
-            const chatMessages = document.getElementById('chatMessages');
-            const scrollIndicator = document.getElementById('scrollIndicator');
-            scrollIndicator.classList.toggle('visible', chatMessages.scrollHeight > chatMessages.clientHeight + chatMessages.scrollTop + 100);
+      function scrollToBottom() {
+        const chatMessages = document.getElementById("chatMessages");
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+        document.getElementById("scrollIndicator").classList.remove("visible");
+      }
+
+      async function requestMicrophonePermission() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            audio: true,
+          });
+          micPermissionGranted = true;
+          window.microphoneStream = stream;
+          console.log("Microphone permission granted");
+          return true;
+        } catch (err) {
+          console.error("Could not get microphone permission:", err);
+          return false;
         }
+      }
 
-        function scrollToBottom() {
-            const chatMessages = document.getElementById('chatMessages');
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            document.getElementById('scrollIndicator').classList.remove('visible');
+      function updateMenu() {
+        if (restaurantName) {
+          fetch(`${API_BASE_URL}/update-menu?restaurant=${restaurantName}`)
+            .then((response) => {
+              if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+              }
+              return response.json();
+            })
+            .then((data) => {
+              // Add a success message to the UI
+              addMessage(
+                `Menu for ${restaurantName} updated successfully.`,
+                "system"
+              );
+            })
+            .catch((error) => {
+              console.error("Error updating menu:", error);
+              addMessage(`Error updating menu: ${error.message}`, "error");
+            });
         }
+      }
 
-        async function requestMicrophonePermission() {
-            try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                micPermissionGranted = true;
-                window.microphoneStream = stream;
-                console.log("Microphone permission granted");
-                return true;
-            } catch (err) {
-                console.error("Could not get microphone permission:", err);
-                return false;
-            }
-        }
-
-        function updateMenu() {
-            if (restaurantName) {
-                fetch(`${API_BASE_URL}/update-menu?restaurant=${restaurantName}`)
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error(`HTTP error! status: ${response.status}`);
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        // Add a success message to the UI
-                        addMessage(`Menu for ${restaurantName} updated successfully.`, 'system');
-                    })
-                    .catch(error => {
-                        console.error('Error updating menu:', error);
-                        addMessage(`Error updating menu: ${error.message}`, 'error');
-                    });
-            }
-        }
-
-    function toggleVoiceMode() {
+      function toggleVoiceMode() {
         voiceMode = !voiceMode;
-        const voiceModeButton = document.getElementById('voiceModeButton');
-    
-        if (voiceMode) {
-            voiceModeButton.classList.add('active');
+        const voiceModeButton = document.getElementById("voiceModeButton");
+
+        if (voiceModeButton) {
+          if (voiceMode) {
+            voiceModeButton.classList.add("active");
             voiceModeButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-        } else {
-            voiceModeButton.classList.remove('active');
+          } else {
+            voiceModeButton.classList.remove("active");
             voiceModeButton.innerHTML = '<i class="fas fa-volume-mute"></i>';
             stopSpeaking(); // Stop any ongoing speech
+          }
         }
-    
-        // Save preference to localStorage
-        localStorage.setItem('voiceMode', voiceMode);
-    }
 
-    function showFollowUpQuestions(followUpQuestions) {
+        // Save preference to localStorage
+        localStorage.setItem("voiceMode", voiceMode.toString());
+      }
+
+      function showFollowUpQuestions(followUpQuestions) {
         if (!followUpQuestions || followUpQuestions.length === 0) return;
 
         const chatMessages = document.getElementById("chatMessages");
         const followUpContainer = document.createElement("div");
         followUpContainer.classList.add("follow-up-container");
 
-        followUpQuestions.forEach(question => {
-            const button = document.createElement("button");
-            button.classList.add("follow-up-button");
-            button.textContent = question;
-            button.onclick = () => handleFollowUp(question);
-            followUpContainer.appendChild(button);
+        followUpQuestions.forEach((question) => {
+          const button = document.createElement("button");
+          button.classList.add("follow-up-button");
+          button.textContent = question;
+          button.onclick = () => handleFollowUp(question);
+          followUpContainer.appendChild(button);
         });
 
         chatMessages.appendChild(followUpContainer);
         chatMessages.scrollTop = chatMessages.scrollHeight; // Ensure scrolling
-    }
+      }
 
-    function addMessage(message, type, followUpQuestions = null) {
-            const chatMessages = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
+      function addMessage(message, type, followUpQuestions = null) {
+        const chatMessages = document.getElementById("chatMessages");
+        const messageDiv = document.createElement("div");
 
-            if (type === 'system') {
-               // Do not add system messages to the UI
-                return; 
-            }
-            if (type === 'ai') {
-                const container = document.createElement('div');
-                container.classList.add('ai-message-container');
-                messageDiv.classList.add('message', 'ai-message');
-                const speakButton = document.createElement('button');
-                speakButton.classList.add('speak-button');
-                speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-                speakButton.onclick = () => toggleSpeak(speakButton, message);
-                container.appendChild(messageDiv);
-                container.appendChild(speakButton);
-                chatMessages.appendChild(container);
-                // Show scroll indicator after AI response
-                showScrollIndicator();
-            } else {
-                messageDiv.classList.add('message');
-                messageDiv.textContent = message;
+        if (type === "system") {
+          // Do not add system messages to the UI
+          return;
+        }
+        if (type === "ai") {
+          const container = document.createElement("div");
+          container.classList.add("ai-message-container");
+          messageDiv.classList.add("message", "ai-message");
+          const speakButton = document.createElement("button");
+          speakButton.classList.add("speak-button");
+          speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+          speakButton.onclick = () => toggleSpeak(speakButton, message);
+          container.appendChild(messageDiv);
+          container.appendChild(speakButton);
+          chatMessages.appendChild(container);
+          // Show scroll indicator after AI response
+          showScrollIndicator();
+        } else {
+          messageDiv.classList.add("message");
+          messageDiv.textContent = message;
 
-                if (type === 'error') {
-                    messageDiv.classList.add('error-message');
-                } else if (type === 'user') {
-                    messageDiv.classList.add('user-message');
-                }
-                 chatMessages.appendChild(messageDiv);
-                 // Show scroll indicator after AI response
-                 showScrollIndicator();
-            }
-
-           
-            chatMessages.scrollTop = chatMessages.scrollHeight;
+          if (type === "error") {
+            messageDiv.classList.add("error-message");
+          } else if (type === "user") {
+            messageDiv.classList.add("user-message");
+          }
+          chatMessages.appendChild(messageDiv);
+          // Show scroll indicator after AI response
+          showScrollIndicator();
         }
 
-        async function handleFollowUp(question = null) {
-            const followUpInput = document.getElementById('followUpInput');
-            const prompt = question || followUpInput.value.trim();
-            followUpInput.value = '';
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      }
 
-            if (!prompt) {
-                addMessage('Please enter a message', 'error');
+      async function handleFollowUp(question = null) {
+        const followUpInput = document.getElementById("followUpInput");
+        const prompt = question || followUpInput.value.trim();
+        followUpInput.value = "";
+
+        if (!prompt) {
+          addMessage("Please enter a message", "error");
+          return;
+        }
+
+        addMessage(prompt, "user");
+
+        try {
+          const requestBody = { prompt };
+          const response = await fetch(`${API_BASE_URL}/continue-chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || `Server error: ${response.status}`);
+          }
+          // Call showBotResponse here with parsed data
+          showBotResponse(data.response, data.followUpQuestions);
+        } catch (error) {
+          console.error("Error:", error);
+          addMessage(
+            `Error: ${error.message}. Please ensure the server is running and configured correctly.`,
+            "error"
+          );
+        } finally {
+          isProcessing = false;
+        }
+      }
+
+      async function toggleRecording() {
+        const button = document.getElementById("recordButton");
+        const icon = button.querySelector("i");
+        const followUpInput = document.getElementById("followUpInput");
+        const avatar = document.getElementById("speakingAvatar");
+        let recognition = null;
+        if (isProcessing) {
+          return;
+        }
+
+        function resetMicrophoneButton() {
+          button.classList.remove("recording");
+          icon.className = "fas fa-microphone";
+          if (recognition) {
+            recognition.stop();
+            recognition = null;
+          }
+        }
+
+        if (!button.classList.contains("recording")) {
+          try {
+            if (!micPermissionGranted) {
+              const permissionGranted = await requestMicrophonePermission();
+              if (!permissionGranted) {
+                addMessage(
+                  "Please grant microphone access to use voice input.",
+                  "error"
+                );
                 return;
+              }
             }
 
-            addMessage(prompt, 'user');
+            recognition = new (window.SpeechRecognition ||
+              window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = false;
 
-            try {
-                const requestBody = { prompt };
-                const response = await fetch(`${API_BASE_URL}/continue-chat`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(requestBody)
-                });
+            recognition.onstart = () => {
+              button.classList.add("recording");
+              icon.className = "fas fa-stop";
+            };
+            recognition.onresult = (event) => {
+              const finalTranscript = event.results[0][0].transcript.trim();
+              followUpInput.value = finalTranscript;
+              resetMicrophoneButton();
+              isProcessing = true;
 
-                const data = await response.json();
+              handleFollowUp(finalTranscript).finally(() => {
+                isProcessing = false;
+              });
+            };
+            recognition.onend = () => {
+              resetMicrophoneButton();
+            };
 
-                if (!response.ok) {
-                    throw new Error(data.error || `Server error: ${response.status}`);
-                }
-                 // Call showBotResponse here with parsed data
-                 showBotResponse(data.response, data.followUpQuestions);
-            } catch (error) {
-                console.error('Error:', error);
-                addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
-            } finally {
-               isProcessing = false;
-            }
+            recognition.onerror = (event) => {
+              console.error("Speech recognition error:", event.error);
+              resetMicrophoneButton();
+              if (event.error === "not-allowed") {
+                micPermissionGranted = false;
+              }
+            };
+
+            recognition.start();
+          } catch (err) {
+            console.error("Error accessing speech recognition:", err);
+            addMessage("Error: Microphone access failed.", "error");
+            resetMicrophoneButton();
+            micPermissionGranted = false;
+          }
+        } else {
+          resetMicrophoneButton();
         }
+      }
 
+      // Function to stop speaking
+      function stopSpeaking() {
+        if (isSpeaking) {
+          speechSynthesis.cancel();
+          isSpeaking = false;
+          document.getElementById("stopSpeakingButton").style.display = "none";
+          currentUtterance = null;
 
-        async function toggleRecording() {
-            const button = document.getElementById('recordButton');
-            const icon = button.querySelector('i');
-            const followUpInput = document.getElementById('followUpInput');
-            const avatar = document.getElementById('speakingAvatar');
-            let recognition = null;
-            if (isProcessing) {
-                return;
-            }
-
-            function resetMicrophoneButton() {
-                button.classList.remove('recording');
-                icon.className = 'fas fa-microphone';
-                if (recognition) {
-                    recognition.stop();
-                    recognition = null;
-                }
-            }
-
-            if (!button.classList.contains('recording')) {
-                try {
-                    if (!micPermissionGranted) {
-                        const permissionGranted = await requestMicrophonePermission();
-                        if (!permissionGranted) {
-                            addMessage("Please grant microphone access to use voice input.", 'error');
-                            return;
-                        }
-                    }
-
-                    recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                    recognition.continuous = false;
-                    recognition.interimResults = false;
-
-                    recognition.onstart = () => {
-                         button.classList.add('recording');
-                         icon.className = 'fas fa-stop';
-                    };
-                    recognition.onresult = (event) => {
-                        const finalTranscript = event.results[0][0].transcript.trim();
-                        followUpInput.value = finalTranscript;
-                        resetMicrophoneButton();
-                        isProcessing = true;
-
-                        handleFollowUp(finalTranscript)
-                            .finally(() => {
-                                isProcessing = false;
-                            });
-                    };
-                     recognition.onend = () => {
-                          resetMicrophoneButton();
-                     };
-
-                    recognition.onerror = (event) => {
-                        console.error('Speech recognition error:', event.error);
-                        resetMicrophoneButton();
-                        if (event.error === 'not-allowed') {
-                            micPermissionGranted = false;
-                        }
-                    };
-
-                    recognition.start();
-                } catch (err) {
-                    console.error('Error accessing speech recognition:', err);
-                    addMessage("Error: Microphone access failed.", 'error');
-                    resetMicrophoneButton();
-                    micPermissionGranted = false;
-                }
-            } else {
-                resetMicrophoneButton();
-            }
-        }
-
-
-// Function to stop speaking
-function stopSpeaking() {
-    if (isSpeaking) {
-        speechSynthesis.cancel();
-        isSpeaking = false;
-        document.getElementById('stopSpeakingButton').style.display = 'none';
-        currentUtterance = null;
+          const avatar = document.getElementById('speakingAvatar');
+    if (avatar) {
+      avatar.style.display = 'none';
+      avatar.classList.remove('speaking');
     }
-}
+        }
+      }
 
-// Clean text for better speech synthesis
-function cleanTextForSpeech(text) {
-    // Remove code blocks
-    text = text.replace(/```[\s\S]*?```/g, "Code block omitted for speech.");
-    
-    // Remove markdown formatting
-    text = text.replace(/\*\*(.*?)\*\*/g, "$1"); // Bold
-    text = text.replace(/\*(.*?)\*/g, "$1"); // Italic
-    text = text.replace(/\[(.*?)\]\(.*?\)/g, "$1"); // Links
-    text = text.replace(/#{1,6}\s(.*?)(?:\n|$)/g, "$1. "); // Headers
-    
-    // Replace bullet points for better speech pauses
-    text = text.replace(/- (.*?)(?:\n|$)/g, "$1. ");
-    text = text.replace(/\d+\. (.*?)(?:\n|$)/g, "$1. ");
-    
-    // Add pauses for better speech flow
-    text = text.replace(/\n\n/g, ". ");
-    
-    return text;
-}
+      // Clean text for better speech synthesis
+      function cleanTextForSpeech(text) {
+        // Remove code blocks
+        text = text.replace(
+          /```[\s\S]*?```/g,
+          "Code block omitted for speech."
+        );
 
-        // Event listeners and initializations
-        document.addEventListener('DOMContentLoaded', () => {
-             if(restaurantName){
-                document.title = `${restaurantName} Menu AI Chat`;
-                const logoText = document.querySelector('.logo-text');
-                if (logoText) {
-                    logoText.textContent = `${restaurantName} Chatbot`;
-                    document.body.style.backgroundImage = `url('${restaurantName}.png')`;
-                    const imageUrl = 'logo.png';
-                    document.getElementById("logo-image").setAttribute("href", imageUrl);
-                }
-                localStorage.setItem('restaurantName', restaurantName);
-             }
+        // Remove markdown formatting
+        text = text.replace(/\*\*(.*?)\*\*/g, "$1"); // Bold
+        text = text.replace(/\*(.*?)\*/g, "$1"); // Italic
+        text = text.replace(/\[(.*?)\]\(.*?\)/g, "$1"); // Links
+        text = text.replace(/#{1,6}\s(.*?)(?:\n|$)/g, "$1. "); // Headers
 
-            if (isAdmin) {
-                window.location.href = "admin.html";
-            }
+        // Replace bullet points for better speech pauses
+        text = text.replace(/- (.*?)(?:\n|$)/g, "$1. ");
+        text = text.replace(/\d+\. (.*?)(?:\n|$)/g, "$1. ");
 
-            updateMenu();
-            // Check microphone permissions
-             if (navigator.permissions) {
-                navigator.permissions.query({ name: 'microphone' })
-                .then(permissionStatus => {
-                    console.log('Microphone permission status:', permissionStatus.state);
+        // Add pauses for better speech flow
+        text = text.replace(/\n\n/g, ". ");
 
-                    // If already granted, set our flag
-                    if (permissionStatus.state === 'granted') {
-                        micPermissionGranted = true;
-                    } else if (permissionStatus.state === 'prompt') {
-                        // If we'll need to ask, do it early
-                        requestMicrophonePermission();
-                    }
-                    // Listen for changes to permission
-                    permissionStatus.onchange = () => {
-                        micPermissionGranted = (permissionStatus.state === 'granted');
-                        console.log('Permission state changed to:', permissionStatus.state);
-                    };
-                });
-            } else {
+        return text;
+      }
+
+      // Event listeners and initializations
+      document.addEventListener("DOMContentLoaded", () => {
+        if (restaurantName) {
+          document.title = `${restaurantName} Menu AI Chat`;
+          const logoText = document.querySelector(".logo-text");
+          if (logoText) {
+            logoText.textContent = `${restaurantName} Chatbot`;
+            document.body.style.backgroundImage = `url('${restaurantName}.png')`;
+            const imageUrl = "logo.png";
+            document
+              .getElementById("logo-image")
+              .setAttribute("href", imageUrl);
+          }
+          localStorage.setItem("restaurantName", restaurantName);
+        }
+
+        if (isAdmin) {
+          window.location.href = "admin.html";
+        }
+
+        updateMenu();
+        // Check microphone permissions
+        if (navigator.permissions) {
+          navigator.permissions
+            .query({ name: "microphone" })
+            .then((permissionStatus) => {
+              console.log(
+                "Microphone permission status:",
+                permissionStatus.state
+              );
+
+              // If already granted, set our flag
+              if (permissionStatus.state === "granted") {
+                micPermissionGranted = true;
+              } else if (permissionStatus.state === "prompt") {
+                // If we'll need to ask, do it early
                 requestMicrophonePermission();
-            }
-
-            document.getElementById('followUpInput').addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleFollowUp();
-                }
+              }
+              // Listen for changes to permission
+              permissionStatus.onchange = () => {
+                micPermissionGranted = permissionStatus.state === "granted";
+                console.log(
+                  "Permission state changed to:",
+                  permissionStatus.state
+                );
+              };
             });
+        } else {
+          requestMicrophonePermission();
+        }
 
-            document.getElementById('chatMessages').addEventListener('scroll', showScrollIndicator);
-            const savedVoiceMode = localStorage.getItem('voiceMode');
-    if (savedVoiceMode !== null) {
-        voiceMode = savedVoiceMode === 'true';
-    }
-    
-    // Create UI elements for voice control if they don't exist
-    if (!document.getElementById('voiceModeButton')) {
-        const voiceModeButton = document.createElement('button');
-        voiceModeButton.id = 'voiceModeButton';
-        voiceModeButton.className = 'control-button';
-        voiceModeButton.innerHTML = voiceMode ? 
-            '<i class="fas fa-volume-up"></i>' : 
-            '<i class="fas fa-volume-mute"></i>';
-        voiceModeButton.title = 'Toggle voice responses';
-        voiceModeButton.onclick = toggleVoiceMode;
-        
-        // Add active class if voice mode is on
-        if (voiceMode) {
-            voiceModeButton.classList.add('active');
-        }
-        
-        // Add to your control bar
-        const controlBar = document.querySelector('.control-bar');
-        if (controlBar) {
-            controlBar.appendChild(voiceModeButton);
-        }
-    }
-    
-    // Add stop speaking button (hidden by default)
-    if (!document.getElementById('stopSpeakingButton')) {
-        const stopSpeakingButton = document.createElement('button');
-        stopSpeakingButton.id = 'stopSpeakingButton';
-        stopSpeakingButton.className = 'control-button';
-        stopSpeakingButton.innerHTML = '<i class="fas fa-stop"></i>';
-        stopSpeakingButton.title = 'Stop speaking';
-        stopSpeakingButton.onclick = stopSpeaking;
-        stopSpeakingButton.style.display = 'none';
-        
-        // Add to your control bar
-        const controlBar = document.querySelector('.control-bar');
-        if (controlBar) {
-            controlBar.appendChild(stopSpeakingButton);
-        }
-    }
-    
-    // Initialize voices
-    if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = () => {
-            console.log('Voices loaded:', speechSynthesis.getVoices().length);
-        };
-    }
-        });
+        document
+          .getElementById("followUpInput")
+          .addEventListener("keydown", function (e) {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              handleFollowUp();
+            }
+          });
 
-        const style = document.createElement('style');
-style.textContent = `
+        document
+          .getElementById("chatMessages")
+          .addEventListener("scroll", showScrollIndicator);
+        const savedVoiceMode = localStorage.getItem("voiceMode");
+        if (savedVoiceMode !== null) {
+          voiceMode = savedVoiceMode === "true";
+        }
+
+        // Create UI elements for voice control if they don't exist
+        loadVoices();
+
+        // Initialize voice mode from localStorage
+        if (savedVoiceMode !== null) {
+          voiceMode = savedVoiceMode === "true";
+        }
+
+        console.log("Initial voice mode:", voiceMode);
+
+        // Set up the voice mode button with correct initial state
+        const controlBar = document.querySelector(".control-bar");
+        if (controlBar && !document.getElementById("voiceModeButton")) {
+          const voiceModeButton = document.createElement("button");
+          voiceModeButton.id = "voiceModeButton";
+          voiceModeButton.className = "control-button";
+          voiceModeButton.innerHTML = voiceMode
+            ? '<i class="fas fa-volume-up"></i>'
+            : '<i class="fas fa-volume-mute"></i>';
+          voiceModeButton.title = "Toggle voice responses";
+          voiceModeButton.onclick = toggleVoiceMode;
+
+          // Add active class if voice mode is on
+          if (voiceMode) {
+            voiceModeButton.classList.add("active");
+          }
+
+          controlBar.appendChild(voiceModeButton);
+        }
+
+        // Add stop speaking button
+        if (controlBar && !document.getElementById("stopSpeakingButton")) {
+          const stopSpeakingButton = document.createElement("button");
+          stopSpeakingButton.id = "stopSpeakingButton";
+          stopSpeakingButton.className = "control-button";
+          stopSpeakingButton.innerHTML = '<i class="fas fa-stop"></i>';
+          stopSpeakingButton.title = "Stop speaking";
+          stopSpeakingButton.onclick = stopSpeaking;
+          stopSpeakingButton.style.display = "none";
+
+          controlBar.appendChild(stopSpeakingButton);
+        }
+      });
+
+      const style = document.createElement("style");
+      style.textContent = `
 .control-button {
     background: none;
     border: 1px solid #ccc;
@@ -472,382 +536,451 @@ style.textContent = `
     border-color: #ff4444;
 }
 `;
-document.head.appendChild(style);
-// I've identified and fixed the following issues:
-// 1. Modified showBotResponse to trigger voice output when voice mode is enabled
-// 2. Fixed issues with the avatar animation during speech
-// 3. Connected the voice system with the message display system
-// 4. Ensured proper coordination between text display and speech
+      document.head.appendChild(style);
+      // I've identified and fixed the following issues:
+      // 1. Modified showBotResponse to trigger voice output when voice mode is enabled
+      // 2. Fixed issues with the avatar animation during speech
+      // 3. Connected the voice system with the message display system
+      // 4. Ensured proper coordination between text display and speech
 
-function showBotResponse(responseText, followUpQuestions) {
-  const chatMessages = document.getElementById("chatMessages");
-  
-  // Create a new message bubble
-  const container = document.createElement("div");
-  container.classList.add("ai-message-container");
-  
-  const botMessage = document.createElement("div");
-  botMessage.classList.add("message", "ai-message");
-  
-  const speakButton = document.createElement("button");
-  speakButton.classList.add("speak-button");
-  speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-  speakButton.onclick = () => toggleSpeak(speakButton, responseText);
-  
-  container.appendChild(botMessage);
-  container.appendChild(speakButton);
-  chatMessages.appendChild(container);
+      function showBotResponse(responseText, followUpQuestions) {
+        const chatMessages = document.getElementById("chatMessages");
 
-  // Auto-speak response if voice mode is enabled (NOW CALLED FIRST)
-  if (voiceMode) {
-      speakText(responseText);
-  }
-  
-  // Start typing effect
-  typeText(botMessage, responseText, 30, () => {
-    showFollowUpQuestions(followUpQuestions);
-  });
+        // Create a new message bubble
+        const container = document.createElement("div");
+        container.classList.add("ai-message-container");
 
-  // Scroll to the bottom
-  chatMessages.scrollTop = chatMessages.scrollHeight;
-  
-  // Show scroll indicator
-  showScrollIndicator();
-}
+        const botMessage = document.createElement("div");
+        botMessage.classList.add("message", "ai-message");
 
+        const speakButton = document.createElement("button");
+        speakButton.classList.add("speak-button");
+        speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+        speakButton.onclick = () => toggleSpeak(speakButton, responseText);
 
-// function showBotResponse(responseText, followUpQuestions) {
-//     const chatMessages = document.getElementById("chatMessages");
+        container.appendChild(botMessage);
+        container.appendChild(speakButton);
+        chatMessages.appendChild(container);
+        // Start voice immediately if voice mode is on
+        if (voiceMode) {
+          setTimeout(() => {
+            console.log("Speaking text:", responseText);
+            speakText(responseText);
+        }, 100);
+        }
+        typeText(botMessage, responseText, 30, () => {
+          // Show follow-up questions after typing is complete
+          showFollowUpQuestions(followUpQuestions);
+        });
 
-//     // Create a new message bubble
-//     const container = document.createElement("div");
-//     container.classList.add("ai-message-container");
+        // Scroll to the bottom
+        chatMessages.scrollTop = chatMessages.scrollHeight;
 
-//     const botMessage = document.createElement("div");
-//     botMessage.classList.add("message", "ai-message");
-
-//     const speakButton = document.createElement("button");
-//     speakButton.classList.add("speak-button");
-//     speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-//     speakButton.onclick = () => toggleSpeak(speakButton, responseText);
-
-//     container.appendChild(botMessage);
-//     container.appendChild(speakButton);
-//     chatMessages.appendChild(container);
-
-//     // Start typing effect
-//     typeText(botMessage, responseText, 50, () => {
-//     showFollowUpQuestions(followUpQuestions);
-//     });
-//      // Auto-speak response if voice mode is enabled
-//         if (voiceMode) {
-//           speakText(responseText);
-//         }
-
-//     // Scroll to the bottom
-//     chatMessages.scrollTop = chatMessages.scrollHeight;
-
-//     // Show scroll indicator
-//     showScrollIndicator();
-// }
-
-function typeText(element, text, speed = 25, callback) {
-    let index = 0;
-    const avatar = document.getElementById('speakingAvatar');
-
-    function type() {
-      if (index < text.length) {
-        element.innerHTML += text.charAt(index);
-        index++;
-        setTimeout(type, speed);
-      } else if (callback) {
-        callback();
-        // Don't remove speaking class here if we're going to speak
-        // This will be handled by speech events
+        // Show scroll indicator
+        showScrollIndicator();
       }
-    }
 
-    if (avatar) {
-      avatar.classList.add('speaking');
-    }
+      // function showBotResponse(responseText, followUpQuestions) {
+      //     const chatMessages = document.getElementById("chatMessages");
 
-    type();
-  }
+      //     // Create a new message bubble
+      //     const container = document.createElement("div");
+      //     container.classList.add("ai-message-container");
 
+      //     const botMessage = document.createElement("div");
+      //     botMessage.classList.add("message", "ai-message");
 
-// function typeText(element, text, speed = 25, callback) {
-//   let index = 0;
-//   const avatar = document.getElementById('speakingAvatar');
-  
-//   function type() {
-//     if (index < text.length) {
-//       element.innerHTML += text.charAt(index);
-//       index++;
-//       setTimeout(type, speed);
-//     } else if (callback) {
-//       callback();
-//       // Don't remove speaking class here if we're going to speak
-//       // This will be handled by speech events
-//     }
-//   }
-  
-//   if (avatar) {
-//     avatar.classList.add('speaking');
-//   }
-  
-//   type();
-// }
+      //     const speakButton = document.createElement("button");
+      //     speakButton.classList.add("speak-button");
+      //     speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+      //     speakButton.onclick = () => toggleSpeak(speakButton, responseText);
 
+      //     container.appendChild(botMessage);
+      //     container.appendChild(speakButton);
+      //     chatMessages.appendChild(container);
+
+      //     // Start typing effect
+      //     typeText(botMessage, responseText, 50, () => {
+      //     showFollowUpQuestions(followUpQuestions);
+      //     });
+      //      // Auto-speak response if voice mode is enabled
+      //         if (voiceMode) {
+      //           speakText(responseText);
+      //         }
+
+      //     // Scroll to the bottom
+      //     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+      //     // Show scroll indicator
+      //     showScrollIndicator();
+      // }
+
+      function typeText(element, text, speed = 25, callback) {
+        let index = 0;
+        const avatar = document.getElementById("speakingAvatar");
+
+        function type() {
+          if (index < text.length) {
+            element.innerHTML += text.charAt(index);
+            index++;
+            setTimeout(type, speed);
+          } else if (callback) {
+            callback();
+            // Don't remove speaking class here if we're going to speak
+            // This will be handled by speech events
+          }
+        }
+
+        if (avatar) {
+          avatar.classList.add("speaking");
+        }
+
+        type();
+      }
+
+      // function typeText(element, text, speed = 25, callback) {
+      //   let index = 0;
+      //   const avatar = document.getElementById('speakingAvatar');
+
+      //   function type() {
+      //     if (index < text.length) {
+      //       element.innerHTML += text.charAt(index);
+      //       index++;
+      //       setTimeout(type, speed);
+      //     } else if (callback) {
+      //       callback();
+      //       // Don't remove speaking class here if we're going to speak
+      //       // This will be handled by speech events
+      //     }
+      //   }
+
+      //   if (avatar) {
+      //     avatar.classList.add('speaking');
+      //   }
+
+      //   type();
+      // }
+
+      // Updated speakText function with debugging and fixes
 function speakText(text) {
-  // Don't speak if voice mode is off
-  if (!voiceMode) return;
-  
-  // Stop any current speech
-  //stopSpeaking();
-  
-  // Clean the text for speech (remove markdown, code blocks, etc.)
-  const cleanedText = cleanTextForSpeech(text);
-  
-  // Create a new utterance
-  currentUtterance = new SpeechSynthesisUtterance(cleanedText);
-  
-  // Select voice (optional - can use system default)
-  const voices = speechSynthesis.getVoices();
-  if (voices.length > 0) {
-    // Example: find a female English voice
-    const preferredVoice = voices.find(voice =>
-      voice.lang.includes('en') && voice.name.includes('Female'));
-    if (preferredVoice) {
-      currentUtterance.voice = preferredVoice;
+    console.log('Starting speech synthesis with voice mode:', voiceMode);
+    
+    // Don't speak if voice mode is off
+    if (!voiceMode) return;
+    
+    // Stop any current speech
+    if (isSpeaking) {
+        stopSpeaking();
     }
-  }
-  
-  // Set properties
- // currentUtterance.rate = 1.0; // Speed of speech (0.1 to 10)
- // currentUtterance.pitch = 1.0; // Pitch (0 to 2)
- // currentUtterance.volume = 1.0; // Volume (0 to 1)
-  
-  // Add event listeners
-  currentUtterance.onstart = () => {
+    
+    // Set status first
     isSpeaking = true;
-    document.getElementById('stopSpeakingButton').style.display = 'inline-block';
-    const avatar = document.getElementById('speakingAvatar');
-    if (avatar) {
-      avatar.classList.add('speaking');
-    }
-  };
-  
-  currentUtterance.onend = () => {
-    isSpeaking = false;
-    document.getElementById('stopSpeakingButton').style.display = 'none';
-    currentUtterance = null;
-    const avatar = document.getElementById('speakingAvatar');
-    if (avatar) {
-      avatar.classList.remove('speaking');
-    }
-  };
-  
-  currentUtterance.onerror = (event) => {
-    console.error('Speech synthesis error:', event);
-    isSpeaking = false;
-    document.getElementById('stopSpeakingButton').style.display = 'none';
-    const avatar = document.getElementById('speakingAvatar');
-    if (avatar) {
-      avatar.classList.remove('speaking');
-    }
-    currentUtterance = null; // Add this line
-  };
-  
-  // Start speaking
-  speechSynthesis.speak(currentUtterance);
-}
-
-function stopSpeaking() {
-  if (isSpeaking) {
-    speechSynthesis.cancel();
-    isSpeaking = false;
-    document.getElementById('stopSpeakingButton').style.display = 'none';
-    currentUtterance = null;
-    const avatar = document.getElementById('speakingAvatar');
-    if (avatar) {
-      avatar.classList.remove('speaking');
-    }
-  }
-}
-
-function toggleSpeak(button, text) {
-  const avatar = document.getElementById('speakingAvatar');
-  
-  if (speaking) {
-    synthesis.cancel();
-    speaking = false;
-    button.classList.remove('speaking');
-    button.innerHTML = '<i class="fas fa-volume-up"></i>';
-    if (avatar) {
-      avatar.classList.remove('speaking');
-    }
-    return;
-  }
-  
-  const utterance = new SpeechSynthesisUtterance(cleanTextForSpeech(text));
-  
-  utterance.onend = () => {
-    speaking = false;
-    button.classList.remove('speaking');
-    button.innerHTML = '<i class="fas fa-volume-up"></i>';
-    if (avatar) {
-      avatar.classList.remove('speaking');
-    }
-  };
-  
-  utterance.onstart = () => {
-    if (avatar) {
-      avatar.classList.add('speaking');
-    }
-  };
-  
-  speaking = true;
-  button.classList.add('speaking');
-  button.innerHTML = '<i class="fas fa-stop"></i>';
-  
-  synthesis.speak(utterance);
-}
-
-// Clean text for better speech synthesis
-function cleanTextForSpeech(text) {
-  // Remove code blocks
-  text = text.replace(/```[\s\S]*?```/g, "Code block omitted for speech.");
-  
-  // Remove markdown formatting
-  text = text.replace(/\*\*(.*?)\*\*/g, "$1"); // Bold
-  text = text.replace(/\*(.*?)\*/g, "$1"); // Italic
-  text = text.replace(/\[(.*?)\]\(.*?\)/g, "$1"); // Links
-  text = text.replace(/#{1,6}\s(.*?)(?:\n|$)/g, "$1. "); // Headers
-  
-  // Replace bullet points for better speech pauses
-  text = text.replace(/- (.*?)(?:\n|$)/g, "$1. ");
-  text = text.replace(/\d+\. (.*?)(?:\n|$)/g, "$1. ");
-  
-  // Add pauses for better speech flow
-  text = text.replace(/\n\n/g, ". ");
-  
-  return text;
-}
-
-async function handleFollowUp(question = null) {
-  const followUpInput = document.getElementById('followUpInput');
-  const prompt = question || followUpInput.value.trim();
-  followUpInput.value = '';
-  
-  if (!prompt) {
-    addMessage('Please enter a message', 'error');
-    return;
-  }
-  
-  addMessage(prompt, 'user');
-  
-  try {
-    const requestBody = { prompt };
-    const response = await fetch(`${API_BASE_URL}/continue-chat`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(requestBody)
-    });
     
-    const data = await response.json();
+    // Show stop button
+    document.getElementById("stopSpeakingButton").style.display = "inline-block";
     
-    if (!response.ok) {
-      throw new Error(data.error || `Server error: ${response.status}`);
+    // Show and animate avatar
+    const avatar = document.getElementById("speakingAvatar");
+    if (avatar) {
+        avatar.style.display = "block";
+        avatar.classList.add("speaking");
     }
     
-    // Call showBotResponse here with parsed data
-    showBotResponse(data.response, data.followUpQuestions);
+    // Clean the text for speech
+    const cleanedText = cleanTextForSpeech(text);
+    console.log("Prepared text for speech:", cleanedText.substring(0, 50) + "...");
     
-  } catch (error) {
-    console.error('Error:', error);
-    addMessage(`Error: ${error.message}. Please ensure the server is running and configured correctly.`, 'error');
-  } finally {
-    isProcessing = false;
-  }
+    // Create a new utterance
+    currentUtterance = new SpeechSynthesisUtterance(cleanedText);
+    
+    // Load voices and log status
+    if (!availableVoices || availableVoices.length === 0) {
+        console.log("Loading voices...");
+        availableVoices = speechSynthesis.getVoices();
+        console.log("Available voices:", availableVoices.length);
+    }
+    
+    // Set preferred voice if available
+    if (availableVoices && availableVoices.length > 0) {
+        // First try to find a female English voice
+        let preferredVoice = availableVoices.find(
+            (voice) => voice.lang.includes("en") && voice.name.toLowerCase().includes("female")
+        );
+        
+        // If not found, try any English voice
+        if (!preferredVoice) {
+            preferredVoice = availableVoices.find(
+                (voice) => voice.lang.includes("en")
+            );
+        }
+        
+        // If still not found, use the first voice
+        if (!preferredVoice && availableVoices.length > 0) {
+            preferredVoice = availableVoices[0];
+        }
+        
+        if (preferredVoice) {
+            console.log("Using voice:", preferredVoice.name);
+            currentUtterance.voice = preferredVoice;
+        }
+    }
+    
+    // Make sure to set these properties before adding event listeners
+    currentUtterance.rate = 1.0;
+    currentUtterance.pitch = 1.0;
+    currentUtterance.volume = 1.0;
+    
+    // Add event listeners
+    currentUtterance.onstart = function(event) {
+        console.log("Speech started successfully");
+        isSpeaking = true;
+    };
+    
+    currentUtterance.onend = function(event) {
+        console.log("Speech ended");
+        isSpeaking = false;
+        document.getElementById("stopSpeakingButton").style.display = "none";
+        
+        if (avatar) {
+            avatar.classList.remove("speaking");
+            avatar.style.display = "none"; // Hide the avatar completely when speech ends
+        }
+    };
+    
+    currentUtterance.onerror = function(event) {
+        console.error("Speech synthesis error:", event);
+        isSpeaking = false;
+        document.getElementById("stopSpeakingButton").style.display = "none";
+        
+        if (avatar) {
+            avatar.classList.remove("speaking");
+        }
+    };
+    
+    // Speech synthesis is actually quite finicky in browsers
+    // This approach works better in most browsers
+    setTimeout(function() {
+        try {
+            console.log("Attempting to speak...");
+            window.speechSynthesis.cancel(); // Clear any pending speech
+            window.speechSynthesis.speak(currentUtterance);
+            console.log("Speech command sent to browser");
+        } catch (err) {
+            console.error("Speech synthesis failed:", err);
+            isSpeaking = false;
+            document.getElementById("stopSpeakingButton").style.display = "none";
+            
+            if (avatar) {
+                avatar.classList.remove("speaking");
+            }
+        }
+    }, 100);
 }
 
-async function toggleRecording() {
-  const button = document.getElementById('recordButton');
-  const icon = button.querySelector('i');
-  const followUpInput = document.getElementById('followUpInput');
-  const avatar = document.getElementById('speakingAvatar');
-  let recognition = null;
-  
-  if (isProcessing) {
-    return;
-  }
-  
-  function resetMicrophoneButton() {
-    button.classList.remove('recording');
-    icon.className = 'fas fa-microphone';
-    if (recognition) {
-      recognition.stop();
-      recognition = null;
-    }
-  }
-  
-  if (!button.classList.contains('recording')) {
-    try {
-      if (!micPermissionGranted) {
-        const permissionGranted = await requestMicrophonePermission();
-        if (!permissionGranted) {
-          addMessage("Please grant microphone access to use voice input.", 'error');
+
+      function stopSpeaking() {
+        if (isSpeaking) {
+          speechSynthesis.cancel();
+          isSpeaking = false;
+          document.getElementById("stopSpeakingButton").style.display = "none";
+          currentUtterance = null;
+          const avatar = document.getElementById("speakingAvatar");
+          if (avatar) {
+            avatar.style.display = "none";
+            avatar.classList.remove("speaking");
+          }
+        }
+      }
+
+      // Fixed toggleSpeak function for manual speech button
+      function toggleSpeak(button, text) {
+        if (isSpeaking) {
+          stopSpeaking();
+          button.classList.remove("speaking");
+          button.innerHTML = '<i class="fas fa-volume-up"></i>';
           return;
         }
-      }
-      
-      recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      
-      recognition.onstart = () => {
-        button.classList.add('recording');
-        icon.className = 'fas fa-stop';
-      };
-      
-      recognition.onresult = (event) => {
-        const finalTranscript = event.results[0][0].transcript.trim();
-        followUpInput.value = finalTranscript;
-        resetMicrophoneButton();
-        isProcessing = true;
-        
-        handleFollowUp(finalTranscript)
-          .finally(() => {
-            isProcessing = false;
-          });
-      };
-      
-      recognition.onend = () => {
-        resetMicrophoneButton();
-      };
-      
-      recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
-        resetMicrophoneButton();
-        if (event.error === 'not-allowed') {
-          micPermissionGranted = false;
-        }
-      };
-      
-      recognition.start();
-    } catch (err) {
-      console.error('Error accessing speech recognition:', err);
-      addMessage("Error: Microphone access failed.", 'error');
-      resetMicrophoneButton();
-      micPermissionGranted = false;
-    }
-  } else {
-    resetMicrophoneButton();
-  }
-}
-    </script>
-</body>
 
+        // If not speaking, start speaking
+        button.classList.add("speaking");
+        button.innerHTML = '<i class="fas fa-stop"></i>';
+
+        // Set up a temporary voice mode
+        const savedVoiceMode = voiceMode;
+        voiceMode = true;
+
+        // Create speech with an onend callback to reset the button
+        speakText(text);
+
+        // Add custom event listener to reset button state
+        if (currentUtterance) {
+          const originalOnEnd = currentUtterance.onend;
+          currentUtterance.onend = (event) => {
+            // Call the original onend
+            if (originalOnEnd) originalOnEnd(event);
+
+            // Reset button state
+            button.classList.remove("speaking");
+            button.innerHTML = '<i class="fas fa-volume-up"></i>';
+
+            // Restore saved voice mode
+            voiceMode = savedVoiceMode;
+          };
+        }
+      }
+
+      // Clean text for better speech synthesis
+      function cleanTextForSpeech(text) {
+        // Remove code blocks
+        text = text.replace(
+          /```[\s\S]*?```/g,
+          "Code block omitted for speech."
+        );
+
+        // Remove markdown formatting
+        text = text.replace(/\*\*(.*?)\*\*/g, "$1"); // Bold
+        text = text.replace(/\*(.*?)\*/g, "$1"); // Italic
+        text = text.replace(/\[(.*?)\]\(.*?\)/g, "$1"); // Links
+        text = text.replace(/#{1,6}\s(.*?)(?:\n|$)/g, "$1. "); // Headers
+
+        // Replace bullet points for better speech pauses
+        text = text.replace(/- (.*?)(?:\n|$)/g, "$1. ");
+        text = text.replace(/\d+\. (.*?)(?:\n|$)/g, "$1. ");
+
+        // Add pauses for better speech flow
+        text = text.replace(/\n\n/g, ". ");
+
+        return text;
+      }
+
+      async function handleFollowUp(question = null) {
+        const followUpInput = document.getElementById("followUpInput");
+        const prompt = question || followUpInput.value.trim();
+        followUpInput.value = "";
+
+        if (!prompt) {
+          addMessage("Please enter a message", "error");
+          return;
+        }
+
+        addMessage(prompt, "user");
+
+        try {
+          const requestBody = { prompt };
+          const response = await fetch(`${API_BASE_URL}/continue-chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.error || `Server error: ${response.status}`);
+          }
+
+          // Call showBotResponse here with parsed data
+          showBotResponse(data.response, data.followUpQuestions);
+        } catch (error) {
+          console.error("Error:", error);
+          addMessage(
+            `Error: ${error.message}. Please ensure the server is running and configured correctly.`,
+            "error"
+          );
+        } finally {
+          isProcessing = false;
+        }
+      }
+
+      function loadVoices() {
+        availableVoices = speechSynthesis.getVoices();
+        console.log("Voices loaded:", availableVoices.length);
+      }
+
+      // Initialize voices
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = loadVoices;
+      }
+
+      async function toggleRecording() {
+        const button = document.getElementById("recordButton");
+        const icon = button.querySelector("i");
+        const followUpInput = document.getElementById("followUpInput");
+        const avatar = document.getElementById("speakingAvatar");
+        let recognition = null;
+
+        if (isProcessing) {
+          return;
+        }
+
+        function resetMicrophoneButton() {
+          button.classList.remove("recording");
+          icon.className = "fas fa-microphone";
+          if (recognition) {
+            recognition.stop();
+            recognition = null;
+          }
+        }
+
+        if (!button.classList.contains("recording")) {
+          try {
+            if (!micPermissionGranted) {
+              const permissionGranted = await requestMicrophonePermission();
+              if (!permissionGranted) {
+                addMessage(
+                  "Please grant microphone access to use voice input.",
+                  "error"
+                );
+                return;
+              }
+            }
+
+            recognition = new (window.SpeechRecognition ||
+            window.webkitSpeechRecognition)();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            recognition.onstart = () => {
+              button.classList.add("recording");
+              icon.className = "fas fa-stop";
+            };
+
+            recognition.onresult = (event) => {
+              const finalTranscript = event.results[0][0].transcript.trim();
+              followUpInput.value = finalTranscript;
+              resetMicrophoneButton();
+              isProcessing = true;
+
+              handleFollowUp(finalTranscript).finally(() => {
+                isProcessing = false;
+              });
+            };
+
+            recognition.onend = () => {
+              resetMicrophoneButton();
+            };
+
+            recognition.onerror = (event) => {
+              console.error("Speech recognition error:", event.error);
+              resetMicrophoneButton();
+              if (event.error === "not-allowed") {
+                micPermissionGranted = false;
+              }
+            };
+
+            recognition.start();
+          } catch (err) {
+            console.error("Error accessing speech recognition:", err);
+            addMessage("Error: Microphone access failed.", "error");
+            resetMicrophoneButton();
+            micPermissionGranted = false;
+          }
+        } else {
+          resetMicrophoneButton();
+        }
+      }
+    </script>
+  </body>
 </html>
