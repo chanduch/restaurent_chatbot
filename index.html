@@ -479,106 +479,131 @@ document.head.appendChild(style);
 // 3. Connected the voice system with the message display system
 // 4. Ensured proper coordination between text display and speech
 
+function showBotResponse(responseText, followUpQuestions) {
+  const chatMessages = document.getElementById("chatMessages");
+  
+  // Create a new message bubble
+  const container = document.createElement("div");
+  container.classList.add("ai-message-container");
+  
+  const botMessage = document.createElement("div");
+  botMessage.classList.add("message", "ai-message");
+  
+  const speakButton = document.createElement("button");
+  speakButton.classList.add("speak-button");
+  speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+  speakButton.onclick = () => toggleSpeak(speakButton, responseText);
+  
+  container.appendChild(botMessage);
+  container.appendChild(speakButton);
+  chatMessages.appendChild(container);
+
+  // Auto-speak response if voice mode is enabled (NOW CALLED FIRST)
+  if (voiceMode) {
+      speakText(responseText);
+  }
+  
+  // Start typing effect
+  typeText(botMessage, responseText, 30, () => {
+    showFollowUpQuestions(followUpQuestions);
+  });
+
+  // Scroll to the bottom
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Show scroll indicator
+  showScrollIndicator();
+}
+
+
 // function showBotResponse(responseText, followUpQuestions) {
-//   const chatMessages = document.getElementById("chatMessages");
-  
-//   // Create a new message bubble
-//   const container = document.createElement("div");
-//   container.classList.add("ai-message-container");
-  
-//   const botMessage = document.createElement("div");
-//   botMessage.classList.add("message", "ai-message");
-  
-//   const speakButton = document.createElement("button");
-//   speakButton.classList.add("speak-button");
-//   speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-//   speakButton.onclick = () => toggleSpeak(speakButton, responseText);
-  
-//   container.appendChild(botMessage);
-//   container.appendChild(speakButton);
-//   chatMessages.appendChild(container);
-  
-//   // Start typing effect
-//   typeText(botMessage, responseText, 50, () => {
+//     const chatMessages = document.getElementById("chatMessages");
+
+//     // Create a new message bubble
+//     const container = document.createElement("div");
+//     container.classList.add("ai-message-container");
+
+//     const botMessage = document.createElement("div");
+//     botMessage.classList.add("message", "ai-message");
+
+//     const speakButton = document.createElement("button");
+//     speakButton.classList.add("speak-button");
+//     speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+//     speakButton.onclick = () => toggleSpeak(speakButton, responseText);
+
+//     container.appendChild(botMessage);
+//     container.appendChild(speakButton);
+//     chatMessages.appendChild(container);
+
+//     // Start typing effect
+//     typeText(botMessage, responseText, 50, () => {
 //     showFollowUpQuestions(followUpQuestions);
-    
-//     // Auto-speak response if voice mode is enabled
-//     if (voiceMode) {
-//       speakText(responseText);
-//     }
-//   });
-  
-//   // Scroll to the bottom
-//   chatMessages.scrollTop = chatMessages.scrollHeight;
-  
-//   // Show scroll indicator
-//   showScrollIndicator();
+//     });
+//      // Auto-speak response if voice mode is enabled
+//         if (voiceMode) {
+//           speakText(responseText);
+//         }
+
+//     // Scroll to the bottom
+//     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+//     // Show scroll indicator
+//     showScrollIndicator();
 // }
 
-function showBotResponse(responseText, followUpQuestions) {
-    const chatMessages = document.getElementById("chatMessages");
-
-    // Create a new message bubble
-    const container = document.createElement("div");
-    container.classList.add("ai-message-container");
-
-    const botMessage = document.createElement("div");
-    botMessage.classList.add("message", "ai-message");
-
-    const speakButton = document.createElement("button");
-    speakButton.classList.add("speak-button");
-    speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-    speakButton.onclick = () => toggleSpeak(speakButton, responseText);
-
-    container.appendChild(botMessage);
-    container.appendChild(speakButton);
-    chatMessages.appendChild(container);
-
-    // Start typing effect
-    typeText(botMessage, responseText, 50, () => {
-    showFollowUpQuestions(followUpQuestions);
-    });
-     // Auto-speak response if voice mode is enabled
-        if (voiceMode) {
-          speakText(responseText);
-        }
-
-    // Scroll to the bottom
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    // Show scroll indicator
-    showScrollIndicator();
-}
-
 function typeText(element, text, speed = 25, callback) {
-  let index = 0;
-  const avatar = document.getElementById('speakingAvatar');
-  
-  function type() {
-    if (index < text.length) {
-      element.innerHTML += text.charAt(index);
-      index++;
-      setTimeout(type, speed);
-    } else if (callback) {
-      callback();
-      // Don't remove speaking class here if we're going to speak
-      // This will be handled by speech events
+    let index = 0;
+    const avatar = document.getElementById('speakingAvatar');
+
+    function type() {
+      if (index < text.length) {
+        element.innerHTML += text.charAt(index);
+        index++;
+        setTimeout(type, speed);
+      } else if (callback) {
+        callback();
+        // Don't remove speaking class here if we're going to speak
+        // This will be handled by speech events
+      }
     }
+
+    if (avatar) {
+      avatar.classList.add('speaking');
+    }
+
+    type();
   }
+
+
+// function typeText(element, text, speed = 25, callback) {
+//   let index = 0;
+//   const avatar = document.getElementById('speakingAvatar');
   
-  if (avatar) {
-    avatar.classList.add('speaking');
-  }
+//   function type() {
+//     if (index < text.length) {
+//       element.innerHTML += text.charAt(index);
+//       index++;
+//       setTimeout(type, speed);
+//     } else if (callback) {
+//       callback();
+//       // Don't remove speaking class here if we're going to speak
+//       // This will be handled by speech events
+//     }
+//   }
   
-  type();
-}
+//   if (avatar) {
+//     avatar.classList.add('speaking');
+//   }
+  
+//   type();
+// }
 
 function speakText(text) {
   // Don't speak if voice mode is off
   if (!voiceMode) return;
   
   // Stop any current speech
-  stopSpeaking();
+  //stopSpeaking();
   
   // Clean the text for speech (remove markdown, code blocks, etc.)
   const cleanedText = cleanTextForSpeech(text);
@@ -630,6 +655,7 @@ function speakText(text) {
     if (avatar) {
       avatar.classList.remove('speaking');
     }
+    currentUtterance = null; // Add this line
   };
   
   // Start speaking
