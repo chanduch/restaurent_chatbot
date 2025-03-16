@@ -48,12 +48,11 @@
 
     <div class="control-bar"></div>
 
-    <div id="speakingAvatar" class="speaking-avatar">
-      <img src="chatbot-avatar.png" alt="Chatbot Avatar" />
-    </div>
-
     <div class="chat-container">
       <div class="chat-messages" id="chatMessages"></div>
+      <div id="speakingAvatar" class="speaking-avatar">
+        <img src="chatbot-avatar.png" alt="Chatbot Avatar" />
+      </div>
       <div
         id="scrollIndicator"
         class="scroll-indicator"
@@ -364,10 +363,11 @@
           currentUtterance = null;
 
           const avatar = document.getElementById('speakingAvatar');
-    if (avatar) {
-      avatar.style.display = 'none';
-      avatar.classList.remove('speaking');
-    }
+          if (avatar) {
+            console.log("11111");
+           avatar.style.display = 'none';
+           avatar.classList.remove('speaking');
+          }
         }
       }
 
@@ -556,7 +556,7 @@
     background: none;
     border: 1px solid #ccc;
     border-radius: 50%;
-    width: 40px;
+    width: 65px;
     height: 40px;
     margin: 0 5px;
     cursor: pointer;
@@ -616,6 +616,14 @@
           showFollowUpQuestions(followUpQuestions);
         });
 
+        if (!isSpeaking) {
+      const avatar = document.getElementById("speakingAvatar");
+      if (avatar) {
+        console.log("22222");
+
+        avatar.style.display = "none";
+      }
+    }
         // Scroll to the bottom
         chatMessages.scrollTop = chatMessages.scrollHeight;
 
@@ -891,6 +899,7 @@ function speakText(text) {
                     
                     if (avatar) {
                         avatar.classList.remove("speaking");
+                        avatar.style.display = "none"; //
                     }
                 }
             }, 500);
@@ -999,6 +1008,7 @@ function stopSpeaking() {
     const avatar = document.getElementById("speakingAvatar");
     if (avatar) {
         avatar.classList.remove("speaking");
+        avatar.style.display = "none"; //
     }
 }
 
