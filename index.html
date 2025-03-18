@@ -5,6 +5,77 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Restaurant AI Chatbot</title>
     <link rel="stylesheet" href="index.css" />
+    <style>
+        .ai-message-container {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 10px;
+  }
+  
+  .speaking-avatar {
+    width: 80px;
+    height: 80px;
+    margin-right: 10px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  
+  .speaking-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .speaking-avatar.speaking {
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+  
+  @keyframes pulse {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.05); opacity: 0.9; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  /* Add responsive styles for smaller screens */
+  @media (max-width: 768px) {
+    .speaking-avatar {
+      width: 80px;
+      height: 80px;
+    }
+    
+    .ai-message {
+      max-width: 75%;
+    }
+  }
+  
+  .ai-message {
+    border-radius: 18px;
+    padding: 12px 16px;
+    margin-left: 0;
+    max-width: 80%;
+  }
+  
+  /* Hide the original avatar that was positioned at the bottom */
+  #speakingAvatar {
+    display: none !important; /* Use !important to ensure it stays hidden */
+  }
+  
+  /* Add a subtle transition effect for the avatar */
+  .speaking-avatar {
+    transition: transform 0.3s ease;
+  }
+  
+  /* Make the AI message container and message consistent */
+  .ai-message-container {
+    margin-bottom: 16px;
+  }
+  
+  /* Add a small gap between the message and speak button */
+  .speak-button {
+    margin-left: 8px;
+  }
+    </style>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
@@ -17,6 +88,34 @@
 
   <body>
     <header class="header">
+      <div class="logo">
+          <!-- Replace with your actual SVG or path to SVG file -->
+          <svg
+          class="logo"
+          id="restaurant-logo"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 100 100"
+        >
+          <defs>
+            <pattern
+              id="imagePattern"
+              patternUnits="userSpaceOnUse"
+              width="100"
+              height="100"
+            >
+              <image id="logo-image" x="0" y="0" width="100" height="100"></image>
+            </pattern>
+          </defs>
+          <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
+        </svg>
+      </div>
+      
+      <h1 class="header-text"></h1>
+      
+      <div class="logo" id="custom-logo">
+      </div>
+  </header>
+    <!-- <header class="header">
       <svg
         class="logo"
         id="restaurant-logo"
@@ -36,6 +135,24 @@
         <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
       </svg>
       <span class="logo-text">Restaurant Chatbot</span>
+      <svg
+      class="logo"
+      id="restaurant-logo"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 100 100"
+    >
+      <defs>
+        <pattern
+          id="imagePattern"
+          patternUnits="userSpaceOnUse"
+          width="100"
+          height="100"
+        >
+          <image id="logo-image" x="0" y="0" width="100" height="100"></image>
+        </pattern>
+      </defs>
+      <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
+    </svg>
       <button
         id="updateMenuBtn"
         class="update-menu-btn"
@@ -44,7 +161,7 @@
       >
         Update Menu
       </button>
-    </header>
+    </header> -->
 
     <div class="control-bar"></div>
 
@@ -94,6 +211,7 @@
       let isSpeaking = false;
       let currentUtterance = null;
       let availableVoices = [];
+      let isTyping = false; // Add this line - new typing flag
       let voiceMode = false; // Toggle for voice mode
 
       const urlParams = new URLSearchParams(window.location.search);
@@ -355,21 +473,21 @@
       }
 
       // Function to stop speaking
-      function stopSpeaking() {
-        if (isSpeaking) {
-          speechSynthesis.cancel();
-          isSpeaking = false;
-          document.getElementById("stopSpeakingButton").style.display = "none";
-          currentUtterance = null;
+      // function stopSpeaking() {
+      //   if (isSpeaking) {
+      //     speechSynthesis.cancel();
+      //     isSpeaking = false;
+      //     document.getElementById("stopSpeakingButton").style.display = "none";
+      //     currentUtterance = null;
 
-          const avatar = document.getElementById('speakingAvatar');
-          if (avatar) {
-            console.log("11111");
-           avatar.style.display = 'none';
-           avatar.classList.remove('speaking');
-          }
-        }
-      }
+      //     const avatar = document.getElementById('speakingAvatar');
+      //     if (avatar) {
+      //       console.log("11111");
+      //      avatar.style.display = 'none';
+      //      avatar.classList.remove('speaking');
+      //     }
+      //   }
+      // }
 
       // Clean text for better speech synthesis
       function cleanTextForSpeech(text) {
@@ -409,7 +527,7 @@
             const iosStartButton = document.createElement("button");
             iosStartButton.id = "iosStartButton";
             iosStartButton.className = "control-button";
-            iosStartButton.innerHTML = '<i class="fas fa-play"></i> Enable Voice';
+            //iosStartButton.innerHTML = '<i class="fas fa-play"></i> Enable Voice';
             iosStartButton.title = "Enable voice on iOS";
             iosStartButton.onclick = function() {
                 // Play a silent utterance to unlock speech synthesis
@@ -425,7 +543,7 @@
             };
             
             // Add to control bar
-            const controlBar = document.querySelector(".control-bar");
+            const controlBar = document.querySelector(".input-buttons");
             if (controlBar) {
                 controlBar.appendChild(iosStartButton);
             }
@@ -439,16 +557,18 @@
             speechSynthesis.resume();
         }
     }, 10000);
-
         if (restaurantName) {
+          console.log("Restaurant name:", restaurantName);
           document.title = `${restaurantName} Menu AI Chat`;
-          const logoText = document.querySelector(".logo-text");
+          const logoText = document.querySelector(".header-text");
+          //console.log(logoText);
           if (logoText) {
             logoText.textContent = `${restaurantName} Chatbot`;
-            document.body.style.backgroundImage = `url('${restaurantName}.png')`;
-            const imageUrl = "logo.png";
+            //document.body.style.backgroundImage = `url('${restaurantName}.png')`;
+
+            const imageUrl = `${restaurantName}`+".png";
             document
-              .getElementById("logo-image")
+              .getElementById("custom-logo")
               .setAttribute("href", imageUrl);
           }
           localStorage.setItem("restaurantName", restaurantName);
@@ -517,7 +637,7 @@
         //console.log("Initial voice mode:", voiceMode);
 
         // Set up the voice mode button with correct initial state
-        const controlBar = document.querySelector(".control-bar");
+        const controlBar = document.querySelector(".input-buttons");
         if (controlBar && !document.getElementById("voiceModeButton")) {
           const voiceModeButton = document.createElement("button");
           voiceModeButton.id = "voiceModeButton";
@@ -549,15 +669,15 @@
           controlBar.appendChild(stopSpeakingButton);
         }
       });
-
+    
       const style = document.createElement("style");
       style.textContent = `
 .control-button {
     background: none;
     border: 1px solid #ccc;
     border-radius: 50%;
-    width: 65px;
-    height: 40px;
+    width: 40px;
+    height: 35px;
     margin: 0 5px;
     cursor: pointer;
     transition: all 0.2s;
@@ -585,51 +705,112 @@
       // 2. Fixed issues with the avatar animation during speech
       // 3. Connected the voice system with the message display system
       // 4. Ensured proper coordination between text display and speech
-
       function showBotResponse(responseText, followUpQuestions) {
-        const chatMessages = document.getElementById("chatMessages");
-
-        // Create a new message bubble
-        const container = document.createElement("div");
-        container.classList.add("ai-message-container");
-
-        const botMessage = document.createElement("div");
-        botMessage.classList.add("message", "ai-message");
-
-        const speakButton = document.createElement("button");
-        speakButton.classList.add("speak-button");
-        speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
-        speakButton.onclick = () => toggleSpeak(speakButton, responseText);
-
-        container.appendChild(botMessage);
-        container.appendChild(speakButton);
-        chatMessages.appendChild(container);
-        // Start voice immediately if voice mode is on
-        if (voiceMode) {
-          setTimeout(() => {
-            //.log("Speaking text:", responseText);
-            speakText(responseText);
-        }, 100);
-        }
-        typeText(botMessage, responseText, 30, () => {
-          // Show follow-up questions after typing is complete
-          showFollowUpQuestions(followUpQuestions);
-        });
-
-        if (!isSpeaking) {
-      const avatar = document.getElementById("speakingAvatar");
-      if (avatar) {
-        console.log("22222");
-
-        avatar.style.display = "none";
-      }
+  const chatMessages = document.getElementById("chatMessages");
+  
+  // Create container for the avatar and message
+  const container = document.createElement("div");
+  container.classList.add("ai-message-container");
+  
+  // Create avatar element
+  const avatar = document.createElement("div");
+  avatar.classList.add("speaking-avatar");
+  if (voiceMode) {
+    avatar.classList.add("speaking");
+  }
+  
+  const avatarImg = document.createElement("img");
+  avatarImg.src = "chatbot-avatar.png"; // Make sure this path is correct
+  avatarImg.alt = "AI Avatar";
+  
+  avatar.appendChild(avatarImg);
+  
+  // Create message bubble
+  const botMessage = document.createElement("div");
+  botMessage.classList.add("message", "ai-message");
+  
+  // Create speak button
+  const speakButton = document.createElement("button");
+  speakButton.classList.add("speak-button");
+  speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+  speakButton.onclick = () => toggleSpeak(speakButton, responseText);
+  
+  // Append elements to container
+  container.appendChild(avatar);
+  container.appendChild(botMessage);
+  container.appendChild(speakButton);
+  
+  // Append container to chat messages
+  chatMessages.appendChild(container);
+  
+  // Start typing animation
+  typeText(botMessage, responseText, 30, () => {
+    // Show follow-up questions after typing is complete
+    showFollowUpQuestions(followUpQuestions);
+    
+    // If not speaking, remove the animation from avatar
+    if (!isSpeaking) {
+      avatar.classList.remove("speaking");
     }
-        // Scroll to the bottom
-        chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
+  
+  // Start voice immediately if voice mode is on
+  if (voiceMode) {
+    setTimeout(() => {
+      speakText(responseText);
+    }, 100);
+  }
+  
+  // Scroll to the bottom
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+  
+  // Show scroll indicator
+  showScrollIndicator();
+}
+    //   function showBotResponse(responseText, followUpQuestions) {
+    //     const chatMessages = document.getElementById("chatMessages");
 
-        // Show scroll indicator
-        showScrollIndicator();
-      }
+    //     // Create a new message bubble
+    //     const container = document.createElement("div");
+    //     container.classList.add("ai-message-container");
+
+    //     const botMessage = document.createElement("div");
+    //     botMessage.classList.add("message", "ai-message");
+
+    //     const speakButton = document.createElement("button");
+    //     speakButton.classList.add("speak-button");
+    //     speakButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+    //     speakButton.onclick = () => toggleSpeak(speakButton, responseText);
+
+    //     container.appendChild(botMessage);
+    //     container.appendChild(speakButton);
+    //     chatMessages.appendChild(container);
+    //     // Start voice immediately if voice mode is on
+    //     if (voiceMode) {
+    //       setTimeout(() => {
+    //         //.log("Speaking text:", responseText);
+    //         speakText(responseText);
+    //     }, 100);
+    //     }
+    //     typeText(botMessage, responseText, 30, () => {
+    //       // Show follow-up questions after typing is complete
+    //       showFollowUpQuestions(followUpQuestions);
+    //     });
+
+    //     if (!isSpeaking) {
+    //   const avatar = document.getElementById("speakingAvatar");
+    //   if (avatar) {
+    //     console.log("22222");
+
+    //     avatar.style.display = "none";
+    //   }
+    // }
+    //     // Scroll to the bottom
+    //     chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    //     // Show scroll indicator
+    //     showScrollIndicator();
+    //   }
 
       // function showBotResponse(responseText, followUpQuestions) {
       //     const chatMessages = document.getElementById("chatMessages");
@@ -667,27 +848,217 @@
       // }
 
       function typeText(element, text, speed = 25, callback) {
-        let index = 0;
-        const avatar = document.getElementById("speakingAvatar");
+  let index = 0;
+  let startTime;
+  
+  const avatar = document.getElementById("speakingAvatar");
+  // Set typing state
+  isTyping = true;
 
-        function type() {
-          if (index < text.length) {
-            element.innerHTML += text.charAt(index);
-            index++;
-            setTimeout(type, speed);
-          } else if (callback) {
-            callback();
-            // Don't remove speaking class here if we're going to speak
-            // This will be handled by speech events
+  function type() {
+    if (!isTyping) {
+      console.log("Typing interrupted.");
+      element.innerHTML = text;
+      if (callback) {
+        callback();
+      }
+      return;
+    }
+    if (index < text.length) {
+      element.innerHTML += text.charAt(index);
+      index++;
+      setTimeout(type, speed);
+    } else if (callback) {
+      isTyping = false;
+      callback();
+    }
+  }
+
+  if (avatar) {
+    avatar.classList.add("speaking");
+  }
+
+  type();
+}
+
+function stopTyping() {
+  console.log("Stopping typing.");
+  isTyping = false;
+}
+      function speakText(text) {
+  console.log('Starting speech synthesis with voice mode:', voiceMode);
+  // Don't speak if voice mode is off
+  if (!voiceMode) return;
+  
+  // Stop any current speech
+  if (isSpeaking) {
+    stopSpeaking();
+  }
+  
+  // Set status first
+  isSpeaking = true;
+  
+  // Show stop button
+  document.getElementById("stopSpeakingButton").style.display = "inline-block";
+  
+  // Find all avatars and add the speaking class to the latest one
+  const avatars = document.querySelectorAll(".speaking-avatar");
+  const latestAvatar = avatars[avatars.length - 1];
+  
+  if (latestAvatar) {
+    // Make sure all other avatars are not speaking
+    avatars.forEach(avatar => {
+      if (avatar !== latestAvatar) {
+        avatar.classList.remove("speaking");
+      }
+    });
+    
+    // Make the latest avatar speak
+    latestAvatar.classList.add("speaking");
+  }
+  
+  // Clean the text for speech
+  const cleanedText = cleanTextForSpeech(text);
+  
+  // Mobile browser detection
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+  
+  // For better mobile compatibility, break text into smaller chunks
+  const maxChunkLength = isMobile ? 150 : 1000;
+  const textChunks = [];
+  
+  // Split text into sentences
+  const sentences = cleanedText.split(/(?<=\.|\?|\!)\s+/);
+  let currentChunk = "";
+  
+  sentences.forEach(sentence => {
+    if ((currentChunk + sentence).length <= maxChunkLength) {
+      currentChunk += sentence + " ";
+    } else {
+      if (currentChunk) textChunks.push(currentChunk.trim());
+      currentChunk = sentence + " ";
+    }
+  });
+  
+  if (currentChunk) textChunks.push(currentChunk.trim());
+  
+  // Load voices
+  if (!availableVoices || availableVoices.length === 0) {
+    availableVoices = speechSynthesis.getVoices();
+  }
+  
+  // Function to speak one chunk
+  let chunkIndex = 0;
+  function speakNextChunk() {
+    if (chunkIndex >= textChunks.length || !isSpeaking) {
+      console.log("Finished speaking all chunks");
+      setTimeout(() => {
+        if (isSpeaking) {
+          isSpeaking = false;
+          document.getElementById("stopSpeakingButton").style.display = "none";
+          const avatars = document.querySelectorAll(".speaking-avatar");
+          avatars.forEach(avatar => {
+            avatar.style.display = "none";
+          });
+          if (latestAvatar) {
+            latestAvatar.classList.remove("speaking");
           }
         }
-
-        if (avatar) {
-          avatar.classList.add("speaking");
-        }
-
-        type();
+      }, 500);
+      return;
+    }
+    
+    const chunk = textChunks[chunkIndex];
+    currentUtterance = new SpeechSynthesisUtterance(chunk);
+    
+    // Set voice properties
+    if (availableVoices && availableVoices.length > 0) {
+      // Try to find a suitable voice
+      let preferredVoice = null;
+      
+      // For iOS, use a specific approach
+      if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+        preferredVoice = availableVoices.find(v =>
+          v.name.includes('Samantha') || 
+          v.name.includes('Karen') ||
+          (v.lang.includes('en') && v.name.includes('Female'))
+        );
+      } else {
+        preferredVoice = availableVoices.find(v =>
+          v.lang.includes('en') &&
+          (v.name.includes('Female') || v.name.toLowerCase().includes('female'))
+        );
       }
+      
+      // Fallback to any English voice
+      if (!preferredVoice) {
+        preferredVoice = availableVoices.find(v => v.lang.includes('en'));
+      }
+      
+      // Last resort: first available voice
+      if (!preferredVoice && availableVoices.length > 0) {
+        preferredVoice = availableVoices[0];
+      }
+      
+      if (preferredVoice) {
+        currentUtterance.voice = preferredVoice;
+      }
+    }
+    
+    // Set properties - mobile devices usually need slower speech
+    currentUtterance.rate = isMobile ? 0.9 : 1.0;
+    currentUtterance.pitch = 1.0;
+    currentUtterance.volume = 1.0;
+    
+    // Handle events
+    currentUtterance.onend = function() {
+      chunkIndex++;
+      //document.getElementsByClassName("speaking-avatar").style.display = "none";
+
+      // Small delay between chunks for better mobile compatibility
+      setTimeout(speakNextChunk, isMobile ? 300 : 50);
+    };
+    
+    currentUtterance.onerror = function(event) {
+      console.error(`Error speaking chunk ${chunkIndex + 1}:`, event);
+      // Try to recover by moving to the next chunk
+      chunkIndex++;
+      setTimeout(speakNextChunk, 500);
+    };
+    
+    try {
+      speechSynthesis.speak(currentUtterance);
+    } catch (err) {
+      console.error("Speech synthesis failed:", err);
+      // Try to recover
+      chunkIndex++;
+      setTimeout(speakNextChunk, 500);
+    }
+  }
+  
+  // Start speaking with appropriate delay based on device
+  setTimeout(speakNextChunk, isMobile ? 300 : 100);
+}
+
+// Update the stopSpeaking function to handle the avatar animation
+function stopSpeaking() {
+  console.log("Stopping speech");
+  isSpeaking = false;
+  
+  // Need to cancel completely for mobile browsers
+  window.speechSynthesis.cancel();
+  document.getElementById("stopSpeakingButton").style.display = "none";
+  currentUtterance = null;
+  
+  // Remove speaking class from all avatars
+  const avatars = document.querySelectorAll(".speaking-avatar");
+  avatars.forEach(avatar => {
+    avatar.classList.remove("speaking");
+    //document.getElementsByClassName("speaking-avatar").style.display = "none";
+    avatar.style.display = "none";
+  });
+  stopTyping();
+}
 
       // function typeText(element, text, speed = 25, callback) {
       //   let index = 0;
@@ -829,188 +1200,188 @@
 // }
 
 // Modified speakText function with mobile browser compatibility
-function speakText(text) {
-    console.log('Starting speech synthesis with voice mode:', voiceMode);
+// function speakText(text) {
+//     console.log('Starting speech synthesis with voice mode:', voiceMode);
     
-    // Don't speak if voice mode is off
-    if (!voiceMode) return;
+//     // Don't speak if voice mode is off
+//     if (!voiceMode) return;
     
-    // Mobile browser detection
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    console.log("Is mobile device:", isMobile);
+//     // Mobile browser detection
+//     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+//     console.log("Is mobile device:", isMobile);
     
-    // Stop any current speech
-    if (isSpeaking) {
-        stopSpeaking();
-    }
+//     // Stop any current speech
+//     if (isSpeaking) {
+//         stopSpeaking();
+//     }
     
-    // Set status first
-    isSpeaking = true;
+//     // Set status first
+//     isSpeaking = true;
     
-    // Show stop button
-    document.getElementById("stopSpeakingButton").style.display = "inline-block";
+//     // Show stop button
+//     document.getElementById("stopSpeakingButton").style.display = "inline-block";
     
-    // Show and animate avatar
-    const avatar = document.getElementById("speakingAvatar");
-    if (avatar) {
-        avatar.style.display = "block";
-        avatar.classList.add("speaking");
-    }
+//     // Show and animate avatar
+//     const avatar = document.getElementById("speakingAvatar");
+//     if (avatar) {
+//         avatar.style.display = "block";
+//         avatar.classList.add("speaking");
+//     }
     
-    // Clean the text for speech
-    const cleanedText = cleanTextForSpeech(text);
+//     // Clean the text for speech
+//     const cleanedText = cleanTextForSpeech(text);
     
-    // For better mobile compatibility, break text into smaller chunks
-    // Mobile browsers often have limitations with long texts
-    const maxChunkLength = isMobile ? 150 : 1000;
-    const textChunks = [];
+//     // For better mobile compatibility, break text into smaller chunks
+//     // Mobile browsers often have limitations with long texts
+//     const maxChunkLength = isMobile ? 150 : 1000;
+//     const textChunks = [];
     
-    // Split text into sentences first
-    const sentences = cleanedText.split(/(?<=\.|\?|\!)\s+/);
-    let currentChunk = "";
+//     // Split text into sentences first
+//     const sentences = cleanedText.split(/(?<=\.|\?|\!)\s+/);
+//     let currentChunk = "";
     
-    sentences.forEach(sentence => {
-        if ((currentChunk + sentence).length <= maxChunkLength) {
-            currentChunk += sentence + " ";
-        } else {
-            if (currentChunk) textChunks.push(currentChunk.trim());
-            currentChunk = sentence + " ";
-        }
-    });
+//     sentences.forEach(sentence => {
+//         if ((currentChunk + sentence).length <= maxChunkLength) {
+//             currentChunk += sentence + " ";
+//         } else {
+//             if (currentChunk) textChunks.push(currentChunk.trim());
+//             currentChunk = sentence + " ";
+//         }
+//     });
     
-    if (currentChunk) textChunks.push(currentChunk.trim());
+//     if (currentChunk) textChunks.push(currentChunk.trim());
     
-    console.log(`Split speech into ${textChunks.length} chunks`);
+//     console.log(`Split speech into ${textChunks.length} chunks`);
     
-    // Load voices
-    if (!availableVoices || availableVoices.length === 0) {
-        availableVoices = speechSynthesis.getVoices();
-    }
-    
+//     // Load voices
+//     if (!availableVoices || availableVoices.length === 0) {
+//         availableVoices = speechSynthesis.getVoices();
+//     }
+//   }
     // Function to speak one chunk
-    let chunkIndex = 0;
-    function speakNextChunk() {
-        if (chunkIndex >= textChunks.length || !isSpeaking) {
-            console.log("Finished speaking all chunks");
-            setTimeout(() => {
-                if (isSpeaking) {
-                    isSpeaking = false;
-                    document.getElementById("stopSpeakingButton").style.display = "none";
+//     let chunkIndex = 0;
+//     function speakNextChunk() {
+//         if (chunkIndex >= textChunks.length || !isSpeaking) {
+//             console.log("Finished speaking all chunks");
+//             setTimeout(() => {
+//                 if (isSpeaking) {
+//                     isSpeaking = false;
+//                     document.getElementById("stopSpeakingButton").style.display = "none";
                     
-                    if (avatar) {
-                        avatar.classList.remove("speaking");
-                        avatar.style.display = "none"; //
-                    }
-                }
-            }, 500);
-            return;
-        }
+//                     if (avatar) {
+//                         avatar.classList.remove("speaking");
+//                         avatar.style.display = "none"; //
+//                     }
+//                 }
+//             }, 500);
+//             return;
+//         }
         
-        const chunk = textChunks[chunkIndex];
-        console.log(`Speaking chunk ${chunkIndex + 1}/${textChunks.length}`);
+//         const chunk = textChunks[chunkIndex];
+//         console.log(`Speaking chunk ${chunkIndex + 1}/${textChunks.length}`);
         
-        currentUtterance = new SpeechSynthesisUtterance(chunk);
+//         currentUtterance = new SpeechSynthesisUtterance(chunk);
         
-        // Set voice properties
-        if (availableVoices && availableVoices.length > 0) {
-            // Try to find a suitable voice
-            let preferredVoice = null;
+//         // Set voice properties
+//         if (availableVoices && availableVoices.length > 0) {
+//             // Try to find a suitable voice
+//             let preferredVoice = null;
             
-            // For iOS, use a specific approach
-            if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-                preferredVoice = availableVoices.find(v => 
-                    v.name.includes('Samantha') || v.name.includes('Karen') || 
-                    (v.lang.includes('en') && v.name.includes('Female')));
-            } else {
-                preferredVoice = availableVoices.find(v => 
-                    v.lang.includes('en') && 
-                    (v.name.includes('Female') || v.name.toLowerCase().includes('female')));
-            }
+//             // For iOS, use a specific approach
+//             if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+//                 preferredVoice = availableVoices.find(v => 
+//                     v.name.includes('Samantha') || v.name.includes('Karen') || 
+//                     (v.lang.includes('en') && v.name.includes('Female')));
+//             } else {
+//                 preferredVoice = availableVoices.find(v => 
+//                     v.lang.includes('en') && 
+//                     (v.name.includes('Female') || v.name.toLowerCase().includes('female')));
+//             }
             
-            // Fallback to any English voice
-            if (!preferredVoice) {
-                preferredVoice = availableVoices.find(v => v.lang.includes('en'));
-            }
+//             // Fallback to any English voice
+//             if (!preferredVoice) {
+//                 preferredVoice = availableVoices.find(v => v.lang.includes('en'));
+//             }
             
-            // Last resort: first available voice
-            if (!preferredVoice && availableVoices.length > 0) {
-                preferredVoice = availableVoices[0];
-            }
+//             // Last resort: first available voice
+//             if (!preferredVoice && availableVoices.length > 0) {
+//                 preferredVoice = availableVoices[0];
+//             }
             
-            if (preferredVoice) {
-                console.log("Using voice:", preferredVoice.name);
-                currentUtterance.voice = preferredVoice;
-            }
-        }
+//             if (preferredVoice) {
+//                 console.log("Using voice:", preferredVoice.name);
+//                 currentUtterance.voice = preferredVoice;
+//             }
+//         }
         
-        // Set properties - mobile devices usually need slower speech
-        currentUtterance.rate = isMobile ? 0.9 : 1.0;
-        currentUtterance.pitch = 1.0;
-        currentUtterance.volume = 1.0;
+//         // Set properties - mobile devices usually need slower speech
+//         currentUtterance.rate = isMobile ? 0.9 : 1.0;
+//         currentUtterance.pitch = 1.0;
+//         currentUtterance.volume = 1.0;
         
-        // Handle events
-        currentUtterance.onend = function() {
-            console.log(`Chunk ${chunkIndex + 1} complete`);
-            chunkIndex++;
-            // Small delay between chunks for better mobile compatibility
-            setTimeout(speakNextChunk, isMobile ? 300 : 50);
-        };
+//         // Handle events
+//         currentUtterance.onend = function() {
+//             console.log(`Chunk ${chunkIndex + 1} complete`);
+//             chunkIndex++;
+//             // Small delay between chunks for better mobile compatibility
+//             setTimeout(speakNextChunk, isMobile ? 300 : 50);
+//         };
         
-        currentUtterance.onerror = function(event) {
-            console.error(`Error speaking chunk ${chunkIndex + 1}:`, event);
-            // Try to recover by moving to the next chunk
-            chunkIndex++;
-            setTimeout(speakNextChunk, 500);
-        };
+//         currentUtterance.onerror = function(event) {
+//             console.error(`Error speaking chunk ${chunkIndex + 1}:`, event);
+//             // Try to recover by moving to the next chunk
+//             chunkIndex++;
+//             setTimeout(speakNextChunk, 500);
+//         };
         
-        try {
-            speechSynthesis.speak(currentUtterance);
-        } catch (err) {
-            console.error("Speech synthesis failed:", err);
-            // Try to recover
-            chunkIndex++;
-            setTimeout(speakNextChunk, 500);
-        }
-    }
+//         try {
+//             speechSynthesis.speak(currentUtterance);
+//         } catch (err) {
+//             console.error("Speech synthesis failed:", err);
+//             // Try to recover
+//             chunkIndex++;
+//             setTimeout(speakNextChunk, 500);
+//         }
+//     }
     
-    // Mobile browsers require user interaction before allowing speech
-    // This helps handle that requirement
-    if (isMobile) {
-        // For iOS Safari specifically
-        if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
-            // Try to use a dummy utterance to unlock speech
-            const unlockUtterance = new SpeechSynthesisUtterance('');
-            unlockUtterance.volume = 0; // Silent
-            unlockUtterance.onend = function() {
-                console.log("iOS speech unlocked");
-                setTimeout(speakNextChunk, 100);
-            };
-            speechSynthesis.speak(unlockUtterance);
-        } else {
-            // For other mobile browsers
-            setTimeout(speakNextChunk, 300);
-        }
-    } else {
-        // Desktop browsers
-        setTimeout(speakNextChunk, 100);
-    }
-}
-function stopSpeaking() {
-    console.log("Stopping speech");
-    isSpeaking = false;
+//     // Mobile browsers require user interaction before allowing speech
+//     // This helps handle that requirement
+//     if (isMobile) {
+//         // For iOS Safari specifically
+//         if (/iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+//             // Try to use a dummy utterance to unlock speech
+//             const unlockUtterance = new SpeechSynthesisUtterance('');
+//             unlockUtterance.volume = 0; // Silent
+//             unlockUtterance.onend = function() {
+//                 console.log("iOS speech unlocked");
+//                 setTimeout(speakNextChunk, 100);
+//             };
+//             speechSynthesis.speak(unlockUtterance);
+//         } else {
+//             // For other mobile browsers
+//             setTimeout(speakNextChunk, 300);
+//         }
+//     } else {
+//         // Desktop browsers
+//         setTimeout(speakNextChunk, 100);
+//     }
+// }
+// function stopSpeaking() {
+//     console.log("Stopping speech");
+//     isSpeaking = false;
     
-    // Need to cancel completely for mobile browsers
-    window.speechSynthesis.cancel();
+//     // Need to cancel completely for mobile browsers
+//     window.speechSynthesis.cancel();
     
-    document.getElementById("stopSpeakingButton").style.display = "none";
-    currentUtterance = null;
+//     document.getElementById("stopSpeakingButton").style.display = "none";
+//     currentUtterance = null;
     
-    const avatar = document.getElementById("speakingAvatar");
-    if (avatar) {
-        avatar.classList.remove("speaking");
-        avatar.style.display = "none"; //
-    }
-}
+//     const avatar = document.getElementById("speakingAvatar");
+//     if (avatar) {
+//         avatar.classList.remove("speaking");
+//         avatar.style.display = "none"; //
+//     }
+// }
 
 // Add this function to detect if the browser supports speech synthesis
 function checkSpeechSupport() {
@@ -1051,9 +1422,12 @@ function checkSpeechSupport() {
 
       // Fixed toggleSpeak function for manual speech button
       function toggleSpeak(button, text) {
+        console.log("Toggle speak called:", isSpeaking);
+
         if (isSpeaking) {
           stopSpeaking();
           button.classList.remove("speaking");
+          document.getElementsByClassName("speaking-avatar").style.display = "none";
           button.innerHTML = '<i class="fas fa-volume-up"></i>';
           return;
         }
@@ -1073,6 +1447,8 @@ function checkSpeechSupport() {
         if (currentUtterance) {
           const originalOnEnd = currentUtterance.onend;
           currentUtterance.onend = (event) => {
+            console.log("Speech ended");
+            document.getElementsByClassName("speaking-avatar").style.display = "none";
             // Call the original onend
             if (originalOnEnd) originalOnEnd(event);
 
@@ -1207,6 +1583,7 @@ function checkSpeechSupport() {
             recognition.onresult = (event) => {
               if (!voiceMode) 
 +                toggleVoiceMode();
+              stopTyping();
               const finalTranscript = event.results[0][0].transcript.trim();
               followUpInput.value = finalTranscript;
               resetMicrophoneButton();
