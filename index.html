@@ -6,7 +6,7 @@
     <title>Restaurant AI Chatbot</title>
     <link rel="stylesheet" href="index.css" />
     <style>
-        .ai-message-container {
+  .ai-message-container {
     display: flex;
     align-items: flex-start;
     margin-bottom: 10px;
@@ -112,7 +112,9 @@
       
       <h1 class="header-text"></h1>
       
-      <div class="logo" id="custom-logo">
+      <div class="logo">
+        <img id="custom-logo" src="#" width=40 height=40 alt="Right Logo">
+
       </div>
   </header>
     <!-- <header class="header">
@@ -567,9 +569,14 @@
             //document.body.style.backgroundImage = `url('${restaurantName}.png')`;
 
             const imageUrl = `${restaurantName}`+".png";
+            console.log("Image URL:", imageUrl);
+            const imageUrl1 = "logo.png";
             document
-              .getElementById("custom-logo")
-              .setAttribute("href", imageUrl);
+              .getElementById("logo-image")
+              .setAttribute("href", imageUrl1);
+            //document.getElementById("custom-logo").style.backgroundImage = `url('${imageUrl}')`;
+            document.getElementById("custom-logo").src=imageUrl;
+
           }
           localStorage.setItem("restaurantName", restaurantName);
         }
