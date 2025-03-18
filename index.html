@@ -76,10 +76,8 @@
     margin-left: 8px;
   }
     </style>
-    <link
-      rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
-    />
+   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap"
@@ -89,6 +87,9 @@
   <body>
     <header class="header">
       <div class="logo">
+          <img id="custom-logo" src="#" width=40 height=40 alt="Right Logo">
+        </div>
+        <h1 class="header-text"></h1>
           <!-- Replace with your actual SVG or path to SVG file -->
           <svg
           class="logo"
@@ -108,13 +109,6 @@
           </defs>
           <circle cx="50" cy="50" r="50" fill="url(#imagePattern)"></circle>
         </svg>
-      </div>
-      
-      <h1 class="header-text"></h1>
-      
-      <div class="logo">
-        <img id="custom-logo" src="#" width=40 height=40 alt="Right Logo">
-
       </div>
   </header>
     <!-- <header class="header">
@@ -529,7 +523,7 @@
             const iosStartButton = document.createElement("button");
             iosStartButton.id = "iosStartButton";
             iosStartButton.className = "control-button";
-            //iosStartButton.innerHTML = '<i class="fas fa-play"></i> Enable Voice';
+            iosStartButton.innerHTML = '<i class="fa-solid fa-play"></i>';
             iosStartButton.title = "Enable voice on iOS";
             iosStartButton.onclick = function() {
                 // Play a silent utterance to unlock speech synthesis
@@ -680,7 +674,7 @@
       const style = document.createElement("style");
       style.textContent = `
 .control-button {
-    background: none;
+    background-color: #fff;
     border: 1px solid #ccc;
     border-radius: 50%;
     width: 40px;
@@ -688,6 +682,7 @@
     margin: 0 5px;
     cursor: pointer;
     transition: all 0.2s;
+    color: #007bff;
 }
 
 .control-button:hover {
@@ -698,6 +693,7 @@
     background-color: #4285f4;
     color: white;
     border-color: #4285f4;
+    text-align: center;
 }
 
 #stopSpeakingButton {
